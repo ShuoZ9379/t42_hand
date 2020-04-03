@@ -1,0 +1,8 @@
+robust_goal1_plan: 0.0, 0.0
+robust_goal7_plan: 0.0, 0.0
+robust_goal4_plan: 0.0, 0.0
+robust_goal6_plan: 0.0, 0.0
+robust_goal5_plan: 0.0, 0.0
+robust_goal2_plan: 0.0, 0.0
+robust_goal3_plan: 0.0, 0.0
+robust_goal0_plan: 0.0, 0.0

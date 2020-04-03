@@ -1,0 +1,15 @@
+<launch>
+  <!-- Requires Python3 - source relavent venv -->
+
+  <arg name="recordData" default="false" />
+
+  <!--<include file="$(find hand_control)/launch/run.launch"></include>-->
+
+  <node pkg="collect_t42" name="collect" type="collect_data.py" output="screen"/>
+  <node pkg="collect_t42" name="actor_record" type="actor_record.py" output="screen"/>
+
+  <node pkg="rosbag" type="record" name="rosbag_record_data"
+       args="record -O /home/pracsys/catkin_ws/src/t42_control/hand_control/data/bag_v4_4 /hand_control/obj_pos_mm /gripper/load /collect/action /hand_control/drop"
+       if="$(arg recordData)" />
+
+</launch>

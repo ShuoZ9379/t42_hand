@@ -1,0 +1,9 @@
+<launch>
+
+  <node pkg="rollout_t42" name="rollout_actor_t42" type="rollout_actor.py" output="screen"/>
+  <node pkg="rollout_t42" name="rollout_recorder" type="rollout_recorder.py" output="screen"/>
+  <node pkg="rollout_t42" name="rollout" type="rollout.py" output="screen"/>
+
+
+
+</launch>

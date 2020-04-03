@@ -1,0 +1,7 @@
+float32[] desired_path
+---
+float32[] real_path
+float32[] actions
+float32[] time
+bool success
+int32 i_path

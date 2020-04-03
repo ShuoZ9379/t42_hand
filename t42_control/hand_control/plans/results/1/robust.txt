@@ -1,0 +1,11 @@
+robust_goal68.0_74.0_n22180_plan: 0.0, 0.0
+robust_goal-28.0_95.0_n2267_plan: 0.0, 100.0
+robust_goal48.0_75.0_n32283_plan: 0.0, 0.0
+robust_goal-19.0_66.0_n93581_plan: 0.0, 100.0
+robust_goal1.69000005722_80.0_n40140_plan: 0.0, 0.0
+robust_goal-8.0_113.0_n27029_plan: 0.0, 0.0
+robust_goal-25.0_65.0_n91587_plan: 0.0, 0.0
+robust_goal92.0_82.0_n6358_plan: 0.0, 100.0
+robust_goal100.0_60.0_n57173_plan: 0.0, 0.0
+robust_goal-49.0_67.0_n6541_plan: 0.0, 100.0
+robust_goal-25.0_65.0_n57702_plan: 0.0, 0.0

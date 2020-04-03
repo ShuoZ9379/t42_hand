@@ -1,0 +1,17 @@
+<launch>
+  <!-- Requires Python3 - source relavent venv -->
+
+  <arg name="recordData" default="true" />
+
+  <!--<include file="$(find hand_control)/launch/run.launch"></include>-->
+
+  <node pkg="collect_t42" name="zs_collect_data" type="zs_collect_data.py" output="screen"/>
+  <node pkg="collect_t42" name="zs_actor_record" type="zs_actor_record.py" output="screen"/>
+  		<rosparam command="load" file="$(find collect_t42)/param/settings.yaml" />
+  </node>
+
+  <node pkg="rosbag" type="record" name="rosbag_record_data"
+       args="record -O /home/szhang/Desktop/red_data/bag_test_v0_0 /hand_control/obj_pos_mm /gripper/load /collect/action /hand_control/drop"
+       if="$(arg recordData)" />
+
+</launch>

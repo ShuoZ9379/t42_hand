@@ -1,0 +1,11 @@
+<launch>
+  <!-- <include file="$(find realsense2_camera)/launch/rs_rgbd.launch">
+    <arg name="camera" value="camera"/>
+    <arg name="serial_no" value="610201003677"/>
+  </include> -->
+  <include file="$(find realsense2_camera)/launch/rs_rgbd.launch">
+    <!-- <arg name="camera" value="camera"/> -->
+    <!-- <arg name="serial_no" value="610205005192"/> -->
+  </include>
+  <node name="bowen_pose_estimate" pkg="bowen_pose_estimate" type="multifacePose" output="screen"/>
+</launch>

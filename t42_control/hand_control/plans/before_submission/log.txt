@@ -1,0 +1,4 @@
+Number: 92818, naive: goal - (60.0, 96.0), success: 1
+Number: 91460, robust: goal - (60.0, 96.0), success: 1
+Number: 15112, naive: goal - (80.0, 81.0), success: 1
+Number: 99239, robust: goal - (80.0, 81.0), success: 1

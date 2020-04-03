@@ -1,0 +1,5 @@
+object_name: 'train_cyl30_red'
+#object_name: 'test_cyl30_red'
+color: 'red'
+collect_idx: 0
+version: '0'

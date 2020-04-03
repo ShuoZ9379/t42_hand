@@ -1,0 +1,8 @@
+float64[] states
+float64[] action
+---
+float64[] next_states
+float64[] mean_shift
+float64 node_probability
+float64 collision_probability
+float64[] bad_action

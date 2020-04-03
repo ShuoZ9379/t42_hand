@@ -1,0 +1,2 @@
+naive_goal-24.0_65.0_n7809_plan: 1
+naive_goal-49.0_67.0_n8926_plan: 1

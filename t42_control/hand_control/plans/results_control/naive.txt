@@ -1,0 +1,7 @@
+naive_goal-49.0_67.0_n76166_traj: 0.0, 0.0
+naive_goal1.69000005722_80.0_n23127_traj: 0.0, 0.0
+naive_goal-25.0_65.0_n86780_traj: 0.0, 0.0
+naive_goal48.0_75.0_n39268_traj: 0.0, 0.0
+naive_goal-8.0_113.0_n80705_traj: 71.4285714286, 0.0
+naive_goal-25.0_65.0_n64873_traj: 0.0, 0.0
+naive_goal-19.0_66.0_n70434_traj: 0.0, 0.0

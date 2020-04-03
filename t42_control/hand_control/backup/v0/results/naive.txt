@@ -1,0 +1,4 @@
+naive_goal6_plan: 0.0, 0.0
+naive_goal1_plan: 0.0, 0.0
+naive_goal3_plan: 0.0, 0.0
+naive_goal0_plan: 0.0, 0.0

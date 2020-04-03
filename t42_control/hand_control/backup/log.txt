@@ -1,0 +1,10 @@
+Number: 2772, robust: goal - (-24.0, 65.0), success: 1
+Number: 6371, robust: goal - (-24.0, 65.0), success: 1
+Number: 7809, naive: goal - (-24.0, 65.0), success: 0
+Number: 8367, robust: goal - (-25.0, 65.0), success: 1
+Number: 5273, robust: goal - (-25.0, 65.0), success: 1
+Number: 41908, robust: goal - (-49.0, 67.0), success: 1
+Number: 49520, robust: goal - (-49.0, 67.0), success: 1
+Number: 8926, naive: goal - (-49.0, 67.0), success: 1
+Number: 3382, robust: goal - (92.0, 82.0), success: 0
+Number: 51044, robust: goal - (1.690000057220459, 80.0), success: 0

@@ -1,0 +1,29 @@
+<launch>
+
+  <!-- <arg name="recordData" default="false" /> -->
+
+  <node pkg="openhand" name="openhandNode" type="openhandNode.py" output="screen">
+		<rosparam command="load" file="$(find hand_control)/param/model_t42_red.yaml"/>
+  </node>
+
+  <!-- <node name="move_gripper" pkg="move_gripper" type="move_gripper" output="screen"/>
+  <node name="gripper_t42" pkg="gripper_nodes" type="gripper_node" output="screen">
+    <rosparam command="load" file="$(find hand_control)/param/control_blue.yaml" />
+  </node> -->
+
+  <node name="gripper_state_publisher" pkg="gripper_state_publisher" type="gripper_state_publisher_node" output="screen"/>
+
+  <node pkg="hand_control" name="hand_control" type="zs_hand_v2.py" output="screen">
+        <rosparam command="load" file="$(find hand_control)/param/zs_red.yaml" />
+  </node>
+
+
+
+  <!--<node name="camera" pkg="usb_cam" type="usb_cam_node">
+    <param name="image_width" value="1024"/>
+    <param name="image_height" value="576"/>
+  </node>
+
+  <node name="marker_tracker" pkg="marker_tracker" type="marker_tracker"/>-->
+
+</launch>

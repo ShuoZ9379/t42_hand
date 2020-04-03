@@ -1,0 +1,5 @@
+robust_goal-25.0_65.0_n8367_plan: 0
+robust_goal-49.0_67.0_n49520_plan: 0
+robust_goal-25.0_65.0_n5273_plan: 0
+robust_goal-24.0_65.0_n6371_plan: 1
+robust_goal-49.0_67.0_n41908_plan: 0

@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="marker_tracker" name="zs_marker_tracker" type="zs_marker_tracker.py" output="screen"/>
+
+</launch>

@@ -1,0 +1,79 @@
+rgb_msg_topic: "/camera/color/image_raw"
+depth_msg_topic: "/camera/aligned_depth_to_color/image_raw"
+
+rgb_msg_topic1: "/camera1/color/image_raw"
+depth_msg_topic1: "/camera1/aligned_depth_to_color/image_raw"
+
+#motoman base cam
+cam_K: [619.4442138671875, 0.0, 315.49298095703125, 0.0, 619.4443359375, 237.61129760742188, 0.0, 0.0, 1.0]
+
+# xyz, q(xyzw)      
+cam_in_base: [0.524604320526123, -0.02932164259254932, 0.961784303188324, -0.6771612763404846, 0.724048912525177, -0.09155406057834625, 0.09393471479415894]        
+
+# move in handmarker frame, rotation is done later
+handmarker2endeffector: [1, 0, 0, 0.007,
+                         0, 1, 0, 0.025,
+                         0, 0, 1, -0.05,
+                         0,0,0,1]
+
+recorded_hand2cam: [  0.999194, -0.0394417, 0.00742836,  0.0567524,
+                    -0.0346653,  -0.941387,  -0.335542,  0.0161387,
+                    0.0202273,   0.335014, -0.941996,    0.28396,
+                            -0,         0,        -0,          1
+
+]
+
+
+
+recorded_hand2cam1: [  0.996981, -0.0571063,  0.0526094, 0.0513417,
+                      -0.0135799, -0.795355,  -0.605992, 0.00347178,
+                      0.0764491,   0.603448,  -0.793729,   0.233679,
+                              -0,          0,         -0,          1]                              
+
+rgb_path:  "/home/bowen/debug/rgb_image6.png"
+depth_path: "/home/bowen/debug/depth_image6.png"
+marker_path: "/home/bowen/debug/marker/rgb_image1.png"
+
+down_sample:
+  leaf_size: 0.005
+
+plane_fitting:
+  distance_threshold: 0.005
+  max_iterations: 1000
+  distance_to_table: 0.005
+
+cylinder_fitting:
+  k_search: 10
+  distance_threshold: 0.005
+  radius_limits_min: 0.0
+  radius_limits_max: 0.1
+  normal_distance_weight: 0.0
+
+remove_noise:
+  radius: 0.05
+  min_number: 30
+
+marker:
+  minDistanceToBorder: 0.01
+  adaptiveThreshWinSizeMax: 50
+  adaptiveThreshWinSizeStep: 2
+  minCornerDistanceRate: 0.05
+  minMarkerPerimeterRate: 0.03
+  markerBorderBits: 1
+  minOtsuStdDev: 5
+  perpectiveRemovePixelPerCell: 4
+  perspectiveRemoveIgnoredMarginPerCell: 0.13
+  maxErroneousBitsInBorderRate: 1.0
+  errorCorrectionRate: 1.0
+  cornerRefinementWinSize: 3
+  cornerRefinementMaxIterations: 100
+  cornerRefinementMinAccuracy: 0.01
+  cornerRefinementMethod: 0
+
+
+  aprilTagCriticalRad: 0
+  aprilTagMinClusterPixels: 0
+
+
+
+
