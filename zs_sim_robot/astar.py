@@ -163,6 +163,7 @@ def predict(state,ac,model,x_std_arr,x_mean_arr,y_std_arr,y_mean_arr):
     state_delta = denormalize(state_delta,y_std_arr,y_mean_arr)
     next_state= sa[:4] + state_delta
     return next_state
+
 class node(object):
     def __init__(self,state):
         self.state=state
@@ -221,6 +222,8 @@ def Astar_discrete_onestep_stomodel(initial_state,goal_loc,model,x_std_arr,x_mea
     num_expanded_nodes=0
     tstart=time.time()
     while len(fringe)!=0:
+        if time.time()-tstart>=100:
+            break
         index=priority_sort(f_fringe)
         
         state_fringe.pop(index)
@@ -262,8 +265,7 @@ def Astar_discrete_onestep_stomodel(initial_state,goal_loc,model,x_std_arr,x_mea
     total_time=time.time()-tstart
     return "failure", None, None, None, num_expanded_nodes, max_size_fringe, total_time
 
-def plot_planned_traj(set_path,run_idx,goal_idx,plan_path,goal_loc,H1,H2,Obs,obs_dist):
-    initial_state=plan_path[0,:]
+def plot_planned_traj(set_path,initial_state,run_idx,goal_idx,plan_path,goal_loc,H1,H2,Obs,obs_dist):
     fig, ax = plt.subplots(figsize=(8,3.5))
     H = np.concatenate((np.array(H1)[:,:], H2), axis=0)
     pgon = plt.Polygon(H, color='y', alpha=1, zorder=0)
@@ -280,7 +282,8 @@ def plot_planned_traj(set_path,run_idx,goal_idx,plan_path,goal_loc,H1,H2,Obs,obs
                 ax.add_artist(obs)
     plt.plot(initial_state[0], initial_state[1], 'ok', markersize=16, color ='r')
     plt.text(-15, 123, 'start state', fontsize=16, color ='r')
-    plt.plot(plan_path[:,0],plan_path[:,1],'-k')
+    if plan_path is not None:
+        plt.plot(plan_path[:,0],plan_path[:,1],'-k')
     plt.ylim([60, 140])
     plt.xlabel('x')
     plt.ylabel('y')
@@ -291,7 +294,7 @@ run_idx=0
 goal_idx=1
 initial_state=gen_init_state(mu,sigma,run_idx)
 goal_loc=Goal[goal_idx]
-goal_loc=np.array([50,80])
+goal_loc=np.array([25,110])
 status, plan_path, plan_action_path,len_action_path, num_expanded_nodes, max_size_fringe, total_time\
 =Astar_discrete_onestep_stomodel(initial_state,goal_loc,model,x_std_arr,x_mean_arr,y_std_arr,y_mean_arr,H1D,H2D,Obs,obs_dist)
 print(len_action_path)
@@ -299,7 +302,7 @@ np.savetxt(set_path+'plan_traj_goal_'+str(goal_idx)+'_run_'+str(run_idx)+'.txt',
            plan_path, fmt='%.20f', delimiter=',')
 np.savetxt(set_path+'plan_action_goal_'+str(goal_idx)+'_run_'+str(run_idx)+'.txt',\
            plan_action_path, fmt='%.20f', delimiter=',')
-plot_planned_traj(set_path,run_idx,goal_idx,plan_path,goal_loc,H1,H2,Obs,obs_dist)
+plot_planned_traj(set_path,initial_state,run_idx,goal_idx,plan_path,goal_loc,H1,H2,Obs,obs_dist)
 
 obs_dist=0
 for goal_idx in [0,7,8,15,2]:
@@ -315,20 +318,189 @@ for goal_idx in [0,7,8,15,2]:
                plan_path, fmt='%.20f', delimiter=',')
     np.savetxt(set_path+'plan_action_goal_'+str(goal_idx)+'_run_'+str(run_idx)+'.txt',\
                plan_action_path, fmt='%.20f', delimiter=',')
-    plot_planned_traj(set_path,run_idx,goal_idx,plan_path,goal_loc,H1,H2,Obs,obs_dist)
+    plot_planned_traj(set_path,initial_state,run_idx,goal_idx,plan_path,goal_loc,H1,H2,Obs,obs_dist)
 
 
-obs_dist=3
-for goal_idx in [0,7,8,15,2]:
+obs_dist=2
+#for goal_idx in [0,7,8,15,2]:
+for goal_idx in [8]:
     run_idx=0
     initial_state=gen_init_state(mu,sigma,run_idx)
     goal_loc=Goal[goal_idx]
     status, plan_path, plan_action_path,len_action_path, num_expanded_nodes, max_size_fringe, total_time\
     =Astar_discrete_onestep_stomodel(initial_state,goal_loc,model,x_std_arr,x_mean_arr,y_std_arr,y_mean_arr,H1D,H2D,Obs,obs_dist)
     print(len_action_path)
-    np.savetxt(obs_set_path+'plan_traj_goal_'+str(goal_idx)+'_run_'+str(run_idx)+'.txt',\
-               plan_path, fmt='%.20f', delimiter=',')
-    np.savetxt(obs_set_path+'plan_action_goal_'+str(goal_idx)+'_run_'+str(run_idx)+'.txt',\
-               plan_action_path, fmt='%.20f', delimiter=',')
-    plot_planned_traj(obs_set_path,run_idx,goal_idx,plan_path,goal_loc,H1,H2,Obs,obs_dist)
+    if len_action_path is not None:
+        np.savetxt(obs_set_path+'plan_traj_goal_'+str(goal_idx)+'_run_'+str(run_idx)+'.txt',\
+                   plan_path, fmt='%.20f', delimiter=',')
+        np.savetxt(obs_set_path+'plan_action_goal_'+str(goal_idx)+'_run_'+str(run_idx)+'.txt',\
+                   plan_action_path, fmt='%.20f', delimiter=',')
+    plot_planned_traj(obs_set_path,initial_state,run_idx,goal_idx,plan_path,goal_loc,H1,H2,Obs,obs_dist)
 
+def mstep_predict(num_steps,state,ac,model,x_std_arr,x_mean_arr,y_std_arr,y_mean_arr):
+    next_state_arr=np.empty((0,4))
+    for i in range(num_steps):
+        sa=np.concatenate([state,ac])
+        inpt = normalize(sa,x_std_arr,x_mean_arr)
+        inpt = torch.tensor(inpt, dtype=torch.float)
+        state_delta = model(inpt)    
+        state_delta = state_delta.detach().numpy()
+        state_delta = denormalize(state_delta,y_std_arr,y_mean_arr)
+        next_state= sa[:4] + state_delta
+        next_state_arr=np.concatenate((next_state_arr,next_state.reshape(1,4)),axis=0)
+        state=next_state
+    return next_state, next_state_arr
+
+class mnode(object):
+    def __init__(self,state,num_steps):
+        self.state=state
+        self.loc=state[:2]
+        self.load=state[2:]
+        self.prev=None
+        self.g=0
+        self.ng=0
+        self.step=0
+        self.action=np.repeat(np.array([0,0]).reshape(1,2),num_steps,axis=0)
+        self.state_h=np.repeat(state.reshape(1,4),num_steps,axis=0)
+    def add_prev(self,prev_node,action,state_h):
+        self.prev=prev_node
+        self.g=calc_g(prev_node,self)
+        self.ng=0
+        self.step=calc_step(prev_node,self)
+        self.action=np.repeat(action.reshape(1,2),num_steps,axis=0)
+        self.state_h=state_h
+    def calc_f(self,h):
+        #self.f=self.g+h
+        self.f=self.ng+h
+        #self.f=self.step+h
+def mstep_isvalid(child,H1D,H2D,Obs,obs_dist):
+    if not mstep_in_hull(child.state_h[:,:2],H1D,H2D):
+        return False
+    elif not (child.state_h[:,2:]>=1).all(): 
+        return False
+    else:
+        for i in child.state_h[:,:2]:
+            if not (np.linalg.norm(i-Obs[:,:2],axis=1)>obs_dist).all():
+                return False
+        return True
+def mstep_in_hull(p,H1,H2):
+    if (H1.find_simplex(p)>=0).all() and (H2.find_simplex(p)<0).all():
+        return True
+    else:
+        return False
+    
+def Astar_discrete_mstep_stomodel(num_steps,initial_state,goal_loc,model,x_std_arr,x_mean_arr,y_std_arr,y_mean_arr,H1D,H2D,Obs,obs_dist):
+    actions=[np.array([-1,1]),np.array([1,-1]),np.array([1,1]),np.array([-1,-1]),np.array([0,1]),np.array([1,0]),np.array([0,-1]),np.array([-1,0])]
+    
+    initial=mnode(initial_state,num_steps)
+    fringe=[initial]
+    initial.calc_f(dist(initial.loc,goal_loc))
+    state_fringe=[initial.state]
+    f_fringe=[initial.f]
+    state_closed_set=[]
+    
+    max_size_fringe=1
+    num_expanded_nodes=0
+    tstart=time.time()
+    while len(fringe)!=0:
+        if time.time()-tstart>=100:
+            break
+        index=priority_sort(f_fringe)
+        
+        state_fringe.pop(index)
+        cur=fringe.pop(index)
+        #print(cur.action)
+        #print(cur.f-cur.g)
+        #print(cur.f-cur.ng)
+        #print(cur.f-cur.step)
+        f_fringe.pop(index)
+
+        if state_closed_set==[] or not np.any(np.all(np.isin(np.array(state_closed_set),cur.state,True),axis=1)):
+            if (np.linalg.norm(goal_loc-cur.state_h[:,:2],axis=1)<=8).any():
+                idx=np.argwhere((np.linalg.norm(goal_loc-cur.state_h[:,:2],axis=1)<=8)==True)[0][0]
+                cur_path=copy.copy(cur)
+                path=[cur_path.state_h[:idx+1,:]]
+                action_path=[cur_path.action[:idx+1,:]]
+                while cur_path.prev != None:
+                    path.insert(0,cur_path.prev.state_h)
+                    action_path.insert(0,cur_path.prev.action)
+                    cur_path=cur_path.prev
+                action_path.pop(0)
+                path[0]=path[0][:1,:]
+                total_time=time.time()-tstart
+                return "success", np.concatenate(path,axis=0), np.concatenate(action_path,axis=0),len(action_path), num_expanded_nodes, max_size_fringe, total_time
+            else:#start expanding
+                num_expanded_nodes+=1
+                for i in actions:
+                    child_state,child_state_h=mstep_predict(num_steps,cur.state,i,model,x_std_arr,x_mean_arr,y_std_arr,y_mean_arr)
+                    child=mnode(child_state,num_steps)
+                    if mstep_isvalid(child,H1D,H2D,Obs,obs_dist):
+                        if state_closed_set==[] or not np.any(np.all(np.isin(np.array(state_closed_set),child.state,True),axis=1)):
+                            if state_fringe==[] or not np.any(np.all(np.isin(np.array(state_fringe),child.state,True),axis=1)):
+                                fringe.append(child)
+                                child.add_prev(cur,i,child_state_h)
+                                child.calc_f(calc_h(child, goal_loc))
+                                state_fringe.append(child.state)
+                                f_fringe.append(child.f)
+                if len(fringe)>max_size_fringe:
+                    max_size_fringe=len(fringe)
+            state_closed_set.append(cur.state)
+    total_time=time.time()-tstart
+    return "failure", None, None, None, num_expanded_nodes, max_size_fringe, total_time
+
+def mplot_planned_traj(num_steps,set_path,initial_state,run_idx,goal_idx,plan_path,goal_loc,H1,H2,Obs,obs_dist):
+    fig, ax = plt.subplots(figsize=(8,3.5))
+    H = np.concatenate((np.array(H1)[:,:], H2), axis=0)
+    pgon = plt.Polygon(H, color='y', alpha=1, zorder=0)
+    ax.add_patch(pgon)
+    goal_plan = plt.Circle((goal_loc[0], goal_loc[1]), 8., color='m')
+    ax.add_artist(goal_plan)
+    plt.text(goal_loc[0]-3.5, goal_loc[1]-2.5, str(goal_idx), fontsize=20)
+    H1D=Delaunay(H1)
+    H2D=Delaunay(H2)
+    for os in Obs:
+        if in_hull(np.array(os[:2]),H1D,H2D):
+            if np.linalg.norm(goal_loc-os[:2])>8+obs_dist:
+                obs = plt.Circle(os[:2], obs_dist, color=[0.4,0.4,0.4])#, zorder=10)
+                ax.add_artist(obs)
+    plt.plot(initial_state[0], initial_state[1], 'ok', markersize=16, color ='r')
+    plt.text(-15, 123, 'start state', fontsize=16, color ='r')
+    if plan_path is not None:
+        plt.plot(plan_path[:,0],plan_path[:,1],'-k')
+    plt.ylim([60, 140])
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.savefig(set_path+'goal_'+str(goal_idx)+'_run_'+str(run_idx)+'_m_'+str(num_steps)+'.png', dpi=200)
+
+
+obs_dist=0
+num_steps=10
+for goal_idx in [0]:
+    run_idx=0
+    initial_state=gen_init_state(mu,sigma,run_idx)
+    goal_loc=Goal[goal_idx]
+    #goal_loc=np.array([0,108])
+    status, plan_path, plan_action_path,len_action_path, num_expanded_nodes, max_size_fringe, total_time\
+    =Astar_discrete_mstep_stomodel(num_steps,initial_state,goal_loc,model,x_std_arr,x_mean_arr,y_std_arr,y_mean_arr,H1D,H2D,Obs,obs_dist)
+    print(len_action_path)
+    np.savetxt(set_path+'plan_traj_goal_'+str(goal_idx)+'_run_'+str(run_idx)+'_m_'+str(num_steps)+'.txt',\
+               plan_path, fmt='%.20f', delimiter=',')
+    np.savetxt(set_path+'plan_action_goal_'+str(goal_idx)+'_run_'+str(run_idx)+'_m_'+str(num_steps)+'.txt',\
+               plan_action_path, fmt='%.20f', delimiter=',')
+    mplot_planned_traj(num_steps,set_path,initial_state,run_idx,goal_idx,plan_path,goal_loc,H1,H2,Obs,obs_dist)
+    
+obs_dist=0.75
+num_steps=10
+#for goal_idx in [0,7,8,15,2]:
+for goal_idx in [8]:
+    run_idx=0
+    initial_state=gen_init_state(mu,sigma,run_idx)
+    goal_loc=Goal[goal_idx]
+    status, plan_path, plan_action_path,len_action_path, num_expanded_nodes, max_size_fringe, total_time\
+    =Astar_discrete_mstep_stomodel(num_steps,initial_state,goal_loc,model,x_std_arr,x_mean_arr,y_std_arr,y_mean_arr,H1D,H2D,Obs,obs_dist)
+    print(len_action_path)
+    np.savetxt(obs_set_path+'plan_traj_goal_'+str(goal_idx)+'_run_'+str(run_idx)+'_m_'+str(num_steps)+'.txt',\
+               plan_path, fmt='%.20f', delimiter=',')
+    np.savetxt(obs_set_path+'plan_action_goal_'+str(goal_idx)+'_run_'+str(run_idx)+'_m_'+str(num_steps)+'.txt',\
+               plan_action_path, fmt='%.20f', delimiter=',')
+    mplot_planned_traj(num_steps,obs_set_path,initial_state,run_idx,goal_idx,plan_path,goal_loc,H1,H2,Obs,obs_dist)
