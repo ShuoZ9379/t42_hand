@@ -1,0 +1,9 @@
+data_mode='_nf_na_ws_nm'
+color='red'
+obj='cyl30'
+data_type='d'
+train_idx='0'
+test_idx='0'
+do_cali=True
+train_separate=True
+base_path='/Users/zsbjltwjj/Desktop/'

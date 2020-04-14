@@ -1,0 +1,32 @@
+process.py:
+GOOD suffix '': remove a) b)
+TOO LONG suffix v1_: remove a) b) c) d) e)
+GOOD suffix v1.6_: remove a) b) d) e)
+NOT EVAL suffix v1.7_: remove a) b) d)
+NOT TRAIN suffix v1.8_: remove a) b) e)
+
+smooth_process.py:(args: [..., filter_size, not recali, include init state,  not remove d), interval, not remove e), length_e, not remove b), not remove c)(, train_mode, suffix)])
+suffix '': ..., 4, not recali, include, not remove d), 10, not remove e), 100, not remove b), not remove c)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+smooth data:
+103,213的filter size太大（20或40）时，会错误。后来通过remove outlier（FTF）变成（FFF）解决。
