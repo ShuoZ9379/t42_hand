@@ -14,14 +14,9 @@ from scipy.spatial import ConvexHull, convex_hull_plot_2d
 
 rollout = 1
 
-comp = 'pracsys'
-
+comp = 'szhang'
 Set = '19c_zstest'
-
-set_modes = ['naive_withCriticCost']#, 'naive_goal']
-# set_modes = ['naive_goal']#, 'naive_goal']
-
-
+set_modes = ['astar']
 
 ############################# Rollout ################################
 if rollout:
