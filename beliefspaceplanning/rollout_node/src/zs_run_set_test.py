@@ -25,28 +25,19 @@ if rollout:
     state_dim = 4
 
     while 1:
-    # for _ in range(10):
         for set_mode in set_modes:
             path = '/home/' + comp + '/catkin_ws/src/beliefspaceplanning/rollout_node/set/set' + Set + '/'
-
             files = glob.glob(path + set_mode + "*.txt")
             files_pkl = glob.glob(path + set_mode + "*.pkl")
 
             if len(files) == 0:
                 continue
-
             for i in range(len(files)):
-
                 action_file = files[i]
                 if action_file.find('traj') > 0:
                     continue
-                files_pkl = glob.glob(path + set_mode + "*.pkl")
                 if any(action_file[:-3] + 'pkl' in f for f in files_pkl):
                     continue
-                # if int(action_file[action_file.find('run')+3]) > 0:
-                #     continue
-                # if action_file.find(set_modes_no[0]) > 0 or action_file.find(set_modes_no[1]) > 0:
-                #     continue
                 pklfile = action_file[:-3] + 'pkl'
 
                 # To distribute rollout files between computers
@@ -54,9 +45,7 @@ if rollout:
                 jb = ja + 1
                 while not (pklfile[jb] == '_'):
                     jb += 1
-                num = int(pklfile[ja:jb])#int(pklfile[ja]) if pklfile[ja+1] == '_' else int(pklfile[ja:ja+2])
-                # if num == 124:
-                #     continue
+                num = int(pklfile[ja:jb])
 
                 print('Rolling-out goal number ' + str(num) + ': ' + action_file + '.')
 
@@ -70,10 +59,7 @@ if rollout:
                 Pro = []
                 for j in range(10):
                     print("Rollout number " + str(j) + ".")
-                    
                     Sro = np.array(rollout_srv(Af, [0,0,0,0]).states).reshape(-1,state_dim)
-
                     Pro.append(Sro)
-
                     with open(pklfile, 'w') as f: 
                         pickle.dump(Pro, f)
