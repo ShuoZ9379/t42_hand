@@ -49,7 +49,7 @@ if rollout:
                 jc = pklfile.find('obs')+3
                 obs_size = int(pklfile[jc:-4])
 
-                print('Rolling-out goal number ' + str(num) + ': ' + action_file + '.')
+                print('Rolling-out goal number ' + str(num) + ', obstacle size ' + str(obs_size) + ': ' + action_file + '.')
 
                 try:
                     A = np.loadtxt(action_file, delimiter=',', dtype=float)[:,:2]
