@@ -85,7 +85,7 @@ if rollout:
                 for j in range(10):
                     print("Rollout number " + str(j) + ".")
                     
-                    Sro = np.array(rollout_srv(Af, [0,0,0,0]).states).reshape(-1,state_dim)
+                    Sro = np.array(rollout_srv(Af, [0,0,0,0],[0.75]).states).reshape(-1,state_dim)
 
                     Pro.append(Sro)
 

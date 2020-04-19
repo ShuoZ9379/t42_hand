@@ -28,7 +28,7 @@ class collect_data():
 
         rospy.Subscriber('/hand_control/gripper_status', String, self.callbackGripperStatus)
         self.pub_gripper_action = rospy.Publisher('/collect/gripper_action', Float32MultiArray, queue_size=10)
-        rospy.Service('/collect/random_episode', Empty, self.run_random_episode)
+        rospy.Service('/collect/random_episode', rolloutReq, self.run_random_episode)
         rospy.Service('/collect/planned_episode', rolloutReq, self.run_planned_episode)
         rospy.Service('/collect/save_data', Empty, self.save_data)
         rospy.Service('/collect/find_sparse_region', sparse_goal, self.find_sparse_region)
@@ -72,6 +72,7 @@ class collect_data():
             self.rate.sleep()
 
         print('[collect_data] Running random episode...')
+        obs_size=np.array(req.obs_size)
 
         Done = False
         msg = Float32MultiArray()
@@ -89,7 +90,7 @@ class collect_data():
 
             msg.data = action
             self.pub_gripper_action.publish(msg)
-            suc = self.move_srv(action).success
+            suc = self.move_srv(np.concatenate((action,obs_size))).success
             n -= 1
 
             # Get observation
@@ -112,7 +113,8 @@ class collect_data():
 
         print('[collect_data] End of episode (%d points so far).'%(self.texp.getSize()))
 
-        return EmptyResponse()
+        #return EmptyResponse()
+        return {'states': [], 'actions_res': [], 'success': True}
 
     def run_planned_episode(self, req):
 
@@ -124,6 +126,7 @@ class collect_data():
         print('[collect_data] Rolling-out new planned actions...')
         #state_seq = self.rollout_srv.call(req)
         A = np.array(req.actions).reshape(-1, 2)
+        obs_size=np.array(req.obs_size)
 
         #self.texp.add_rollout_data() # Add rollout data to database
 
@@ -152,7 +155,7 @@ class collect_data():
 
             msg.data = action
             self.pub_gripper_action.publish(msg)
-            suc = self.move_srv(action).success
+            suc = self.move_srv(np.concatenate((action,obs_size))).success
             n -= 1
 
             # Get observation

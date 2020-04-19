@@ -46,6 +46,8 @@ if rollout:
                 while not (pklfile[jb] == '_'):
                     jb += 1
                 num = int(pklfile[ja:jb])
+                jc = pklfile.find('obs')+3
+                obs_size = int(pklfile[jc:-4])
 
                 print('Rolling-out goal number ' + str(num) + ': ' + action_file + '.')
 
@@ -59,7 +61,7 @@ if rollout:
                 Pro = []
                 for j in range(10):
                     print("Rollout number " + str(j) + ".")
-                    Sro = np.array(rollout_srv(Af, [0,0,0,0]).states).reshape(-1,state_dim)
+                    Sro = np.array(rollout_srv(Af, [0,0,0,0],[obs_size]).states).reshape(-1,state_dim)
                     Pro.append(Sro)
                     with open(pklfile, 'w') as f: 
                         pickle.dump(Pro, f)

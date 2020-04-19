@@ -169,16 +169,21 @@ class hand_control():
     def MoveGripper(self, msg):
         # This function should accept a vector of normalized incraments to the current angles: msg.angles = [dq1, dq2], where dq1 and dq2 can be equal to 0 (no move), 1,-1 (increase or decrease angles by finger_move_step_size)
 
-        inc = np.array(msg.angles)
+        inc = np.array(msg.angles)[:2]
+        obs_size = None
+        if self.OBS:
+            if np.array(msg.angles).shape[0]==3:
+                obs_size = np.array(msg.angles)[-1]
+
         inc_angles = np.multiply(self.finger_move_step_size, inc)
 
         desired = self.gripper_pos + inc_angles
 
-        suc = self.moveGripper(desired)
+        suc = self.moveGripper(desired,obs_size=obs_size)
 
         return {'success': suc}
     
-    def moveGripper(self, angles):
+    def moveGripper(self, angles, obs_size=None):
 
         if angles[0] > 0.7 or angles[1] > 0.7 or angles[0] < 0.003 or angles[1] < 0.003:
             rospy.logerr('[hand_control_sim] Desired angles out of bounds.')
@@ -199,8 +204,10 @@ class hand_control():
         #     ])
 
         if self.OBS:
+            if obs_size is None:
+                obs_size=self.Obs[0,2]
             for obs in self.Obs:
-                if np.linalg.norm(self.obj_pos-obs[:2]) < obs[2]:
+                if np.linalg.norm(self.obj_pos-obs[:2]) < obs_size:
                     print('[hand_control_sim] Collision.')
                     return False
         return True

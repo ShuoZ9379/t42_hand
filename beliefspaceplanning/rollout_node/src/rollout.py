@@ -50,7 +50,7 @@ class rollout():
         # while not rospy.is_shutdown():
         rospy.spin()
 
-    def run_rollout(self, A):
+    def run_rollout(self, A, obs_size=np.array([0.75])):
         self.rollout_transition = []
 
         # Reset gripper
@@ -87,7 +87,7 @@ class rollout():
             
             msg.data = action
             self.action_pub.publish(msg)
-            suc = self.move_srv(action).success
+            suc = self.move_srv(np.concatenate((action,obs_size))).success
             n -= 1
             
             next_state = np.array(self.obs_srv().state)
@@ -146,8 +146,9 @@ class rollout():
     def CallbackRollout(self, req):
         
         actions_nom = np.array(req.actions).reshape(-1, self.action_dim)
+        obs_size = np.array(req.obs_size)
         success = True
-        success = self.run_rollout(actions_nom)
+        success = self.run_rollout(actions_nom,obs_size)
 
         return {'states': self.states, 'actions_res': self.actions, 'success' : success}
 

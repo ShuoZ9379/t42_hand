@@ -10,7 +10,7 @@ import time
 
 epi_srv = rospy.ServiceProxy('/collect/planned_episode', rolloutReq)
 save_srv = rospy.ServiceProxy('/collect/save_data', Empty)
-rand_epi_srv = rospy.ServiceProxy('/collect/random_episode', Empty)
+rand_epi_srv = rospy.ServiceProxy('/collect/random_episode', rolloutReq)
 
 
 for i in range(1,100000):
@@ -41,13 +41,13 @@ for i in range(1,100000):
         Af = np.array(Af)
 
         #epi_srv(Af.reshape(-1,1))
-        if not epi_srv(Af.reshape(-1,1), np.zeros((4,))).success:
+        if not epi_srv(Af.reshape(-1,1), np.zeros((4,)),np.array([0.75])).success:
             print('Path failed.')
         else:
             print('Path succeeded.')
     else:
         print "Running random episode..."
-        rand_epi_srv()
+        rand_epi_srv(np.zeros((4,)),np.zeros((4,)),np.array([0.75]))
         
     # if not (i % 10):
     #     save_srv()

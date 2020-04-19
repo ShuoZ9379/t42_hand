@@ -1,5 +1,6 @@
 float64[] actions
 float64[] start_state
+float64[] obs_size
 ---
 float64[] states
 float64[] actions_res
