@@ -24,44 +24,49 @@ if rollout:
     rospy.init_node('run_rollout_set', anonymous=True)
     state_dim = 4
 
-    while 1:
-        for set_mode in set_modes:
-            path = '/home/' + comp + '/catkin_ws/src/beliefspaceplanning/rollout_node/set/set' + Set + '/'
-            files = glob.glob(path + set_mode + "*.txt")
-            files_pkl = glob.glob(path + set_mode + "*.pkl")
+    
+    for set_mode in set_modes:
+        path = '/home/' + comp + '/catkin_ws/src/beliefspaceplanning/rollout_node/set/set' + Set + '/'
+        files = glob.glob(path + set_mode + "*.txt")
+        files_pkl = glob.glob(path + set_mode + "*.pkl")
 
-            if len(files) == 0:
+        if len(files) == 0:
+            continue
+        for i in range(len(files)):
+            action_file = files[i]
+            if action_file.find('traj') > 0:
                 continue
-            for i in range(len(files)):
-                action_file = files[i]
-                if action_file.find('traj') > 0:
-                    continue
-                if any(action_file[:-3] + 'pkl' in f for f in files_pkl):
-                    continue
-                pklfile = action_file[:-3] + 'pkl'
+            if any(action_file[:-3] + 'pkl' in f for f in files_pkl):
+                continue
+            pklfile = action_file[:-3] + 'pkl'
 
-                # To distribute rollout files between computers
-                ja = pklfile.find('goal')+4
-                jb = ja + 1
-                while not (pklfile[jb] == '_'):
-                    jb += 1
-                num = int(pklfile[ja:jb])
-                jc = pklfile.find('obs')+3
-                obs_size = int(pklfile[jc:-4])
+            # To distribute rollout files between computers
+            ja = pklfile.find('goal')+4
+            jb = ja + 1
+            while not (pklfile[jb] == '_'):
+                jb += 1
+            num = int(pklfile[ja:jb])
+            jc = pklfile.find('obs')+3
+            obs_size = float(pklfile[jc:-9])
+            jd = pklfile.find('run')+3         
+            je = jd + 1
+            while not (pklfile[je] == '_'):
+                je += 1
+            run_idx = int(pklfile[jd:je])
 
-                print('Rolling-out goal number ' + str(num) + ', obstacle size ' + str(obs_size) + ': ' + action_file + '.')
+            print('Rolling-out goal number ' + str(num) + ', run index ' + str(run_idx) + ', obstacle size ' + str(obs_size) + ': ' + action_file + '.')
 
-                try:
-                    A = np.loadtxt(action_file, delimiter=',', dtype=float)[:,:2]
-                except:
-                    A = np.loadtxt(action_file, delimiter=',', dtype=float)
-                    print A.shape
+            try:
+                A = np.loadtxt(action_file, delimiter=',', dtype=float)[:,:2]
+            except: 
+                A = np.loadtxt(action_file, delimiter=',', dtype=float)
+                print A.shape
 
-                Af = A.reshape((-1,))
-                Pro = []
-                for j in range(10):
-                    print("Rollout number " + str(j) + ".")
-                    Sro = np.array(rollout_srv(Af, [0,0,0,0],[obs_size]).states).reshape(-1,state_dim)
-                    Pro.append(Sro)
-                    with open(pklfile, 'w') as f: 
-                        pickle.dump(Pro, f)
+            Af = A.reshape((-1,))
+            Pro = []
+            for j in range(10):
+                print("Rollout number " + str(j) + ".")
+                Sro = np.array(rollout_srv(Af, [0,0,0,0],[obs_size]).states).reshape(-1,state_dim)                    
+                Pro.append(Sro)
+                with open(pklfile, 'w') as f: 
+                    pickle.dump(Pro, f)

@@ -13,10 +13,10 @@ save_srv = rospy.ServiceProxy('/collect/save_data', Empty)
 rand_epi_srv = rospy.ServiceProxy('/collect/random_episode', rolloutReq)
 
 
-for i in range(1,100000):
+for i in range(1,2):
 
     #if np.random.uniform() > 1.1:
-    if 1:
+    if 0:
         # goal = str(np.random.randint(1,18))
         # print('Running goal number ' + goal + '.')
 

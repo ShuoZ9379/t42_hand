@@ -19,7 +19,7 @@ class collect_data():
     drop = True
 
     num_episodes = 20000
-    episode_length = 10000
+    episode_length = 10
 
     texp = transition_experience(Load=True, discrete = discrete_actions)
     

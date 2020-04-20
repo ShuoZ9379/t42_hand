@@ -3,6 +3,7 @@
 import rospy
 from std_srvs.srv import Empty, EmptyResponse
 import numpy as np
+from rollout_node.srv import rolloutReq
 import matplotlib.pyplot as plt
 
 save_srv = rospy.ServiceProxy('/collect/save_data', Empty)
