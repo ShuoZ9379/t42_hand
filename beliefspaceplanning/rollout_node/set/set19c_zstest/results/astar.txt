@@ -1,0 +1,6 @@
+astar_goal0_run0_m100_obs0.75_plan: 40.0, 0.0
+astar_goal8_run0_m100_obs0.75_plan: 90.0, 0.0
+astar_goal15_run0_m100_obs0.75_plan: 0.0, 0.0
+astar_goal0_run0_m100_obs0_plan: 70.0, 10.0
+astar_goal15_run0_m100_obs0_plan: 0.0, 0.0
+astar_goal8_run0_m100_obs0_plan: 100.0, 0.0

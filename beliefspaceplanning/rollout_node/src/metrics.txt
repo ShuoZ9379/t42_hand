@@ -1,0 +1,1 @@
+success rate, goal reach rate, plan path length, success path length, failure path length, plan path steps, failure path steps, success path last distance to goal, failure path last distance to goal, success path RMSE relative to plan path
