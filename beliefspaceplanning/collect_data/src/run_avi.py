@@ -16,3 +16,4 @@ for i in range(1,2):
     rand_epi_srv(np.zeros((4,)),np.zeros((4,)),np.array([0.75]))
     print "Collection For One Episode is Done!"
     save_srv()
+a
