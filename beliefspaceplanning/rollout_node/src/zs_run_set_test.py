@@ -157,6 +157,7 @@ else:
     idx = [0, 8, 15]
 
     j = 1
+    #r=8.
     r=10.
     for i in idx:
         ctr = C[i]
@@ -234,7 +235,7 @@ else:
 
     #rp = 5.0
     #r = 8.
-    r = 10.
+    #r = 10.
     #Pc = []
     #Acc = []
     Pastar = []
