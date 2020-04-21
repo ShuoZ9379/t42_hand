@@ -157,9 +157,10 @@ else:
     idx = [0, 8, 15]
 
     j = 1
+    r=10.
     for i in idx:
         ctr = C[i]
-        goal_plan = plt.Circle((ctr[0], ctr[1]), 8., color='m')
+        goal_plan = plt.Circle((ctr[0], ctr[1]), r, color='m')
         ax.add_artist(goal_plan)
         plt.text(ctr[0]-2.5, ctr[1]-2, str(j), fontsize=20)
         j += 1
