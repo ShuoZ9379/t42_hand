@@ -15,7 +15,7 @@ def in_hull(p,H1,H2):
 
 
 rollout = 0
-1221331
+
 comp = 'szhang'
 Set = '19c_zstest'
 #set_modes = ['astar']
