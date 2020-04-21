@@ -232,7 +232,8 @@ else:
         return np.mean(suc_last_dist),np.mean(fail_last_dist)
 
     #rp = 5.0
-    r = 8.
+    #r = 8.
+    r = 10.
     #Pc = []
     #Acc = []
     Pastar = []
