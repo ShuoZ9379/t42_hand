@@ -14,11 +14,12 @@ def in_hull(p,H1,H2):
         return False
 
 
-rollout = 0
+rollout = 1
 
 comp = 'szhang'
 Set = '19c_zstest'
-set_modes = ['astar']
+#set_modes = ['astar']
+set_modes = ['naive']
 
 ############################# Rollout ################################
 if rollout:
@@ -53,8 +54,11 @@ if rollout:
             while not (pklfile[jb] == '_'):
                 jb += 1
             num = int(pklfile[ja:jb])
-            jc = pklfile.find('obs')+3
-            obs_size = float(pklfile[jc:-9])
+            if set_mode=='astar':
+                jc = pklfile.find('obs')+3
+                obs_size = float(pklfile[jc:-9])
+            else:
+                obs_size=0.75
             jd = pklfile.find('run')+3         
             je = jd + 1
             while not (pklfile[je] == '_'):
@@ -155,10 +159,14 @@ else:
 
     #idx = [0, 7, 8, 15, 2]
     idx = [0, 8, 15]
+    if set_modes[0]=='naive':
+        idx=[8]
 
     j = 1
     #r=8.
     r=10.
+    if set_modes[0]=='naive':
+        r=8.
     for i in idx:
         ctr = C[i]
         goal_plan = plt.Circle((ctr[0], ctr[1]), r, color='m')
@@ -244,6 +252,8 @@ else:
     if evaluation:
         #obs_sizes=[0,0.75,1.5,3]
         obs_sizes=['0','0.75']
+        if set_modes[0]=='naive':
+            obs_sizes=['0.75']
         new_C=[]
         for i in idx:
             new_C.append(C[i])
@@ -278,8 +288,11 @@ else:
                 if num not in idx:
                     continue
                 goal_idx=idx.index(num)
-                jc = pklfile.find('obs')+3
-                obs_size = pklfile[jc:-9]
+                if set_mode=='astar':
+                    jc = pklfile.find('obs')+3
+                    obs_size = pklfile[jc:-9]
+                else:
+                    obs_size='0.75'
                 if obs_size not in obs_sizes:
                     continue
                 obs_idx = obs_sizes.index(pklfile[jc:-9])
@@ -451,37 +464,37 @@ else:
             goal_idx=loc // len(obs_sizes)
             obs_idx=loc %  len(obs_sizes)
             return idx[goal_idx],obs_sizes[obs_idx]
-
-        download_dir = results_path + '/summary.csv' 
-        csv = open(download_dir, "w") 
-        csv.write("Goal #,Obstacle Size,")
-        for key in Sum.keys():
-            for _ in range(Sum[key].shape[1]):
-                csv.write(key + ',')
-        csv.write('\n')
-        csv.write(',,')
-        for key in Sum.keys():
-            csv.write('success rate, goal reach rate, plan path length, success path length, failure path length, plan path steps, failure path steps, success path last distance to goal, failure path last distance to goal, success path RMSE relative to plan path,')
-        csv.write('\n')
-        for loc in range(len(obs_sizes)*len(idx)):
-            goal,obs_size=convert_to_goal_and_obs(loc,idx,obs_sizes)
-            csv.write(str(goal) + ',')
-            csv.write(obs_size + ',')
+        if set_modes[0]!='naive':
+            download_dir = results_path + '/summary.csv' 
+            csv = open(download_dir, "w") 
+            csv.write("Goal #,Obstacle Size,")
             for key in Sum.keys():
-                for j in range(Sum[key].shape[1]):
-                    if Sum[key][loc, j]==-1:
-                        csv.write('-,')
-                    else:
-                        csv.write(str(Sum[key][loc, j]) + ',')
+                for _ in range(Sum[key].shape[1]):
+                    csv.write(key + ',')
             csv.write('\n')
+            csv.write(',,')
+            for key in Sum.keys():
+                csv.write('success rate, goal reach rate, plan path length, success path length, failure path length, plan path steps, failure path steps, success path last distance to goal, failure path last distance to goal, success path RMSE relative to plan path,')
+            csv.write('\n')
+            for loc in range(len(obs_sizes)*len(idx)):
+                goal,obs_size=convert_to_goal_and_obs(loc,idx,obs_sizes)
+                csv.write(str(goal) + ',')
+                csv.write(obs_size + ',')
+                for key in Sum.keys():
+                    for j in range(Sum[key].shape[1]):
+                        if Sum[key][loc, j]==-1:
+                            csv.write('-,')
+                        else:
+                            csv.write(str(Sum[key][loc, j]) + ',')
+                csv.write('\n')
 
-        print("Astar: ")
-        print("Mean success rate: ", np.mean(np.array(Pastar)))
-        print("Mean error: ", np.mean(np.array(Acastar)))
-        #print "Naive: "
-        #print "Mean success rate: ", np.mean(np.array(Pn))
-        #print "Mean error: ", np.mean(np.array(Acn))
-        #print "Critic: "
-        #print "Mean success rate: ", np.mean(np.array(Pc))
-        #print "Mean error: ", np.mean(np.array(Acc))
+            print("Astar: ")
+            print("Mean success rate: ", np.mean(np.array(Pastar)))
+            print("Mean error: ", np.mean(np.array(Acastar)))
+            #print "Naive: "
+            #print "Mean success rate: ", np.mean(np.array(Pn))
+            #print "Mean error: ", np.mean(np.array(Acn))
+            #print "Critic: "
+            #print "Mean success rate: ", np.mean(np.array(Pc))
+            #print "Mean error: ", np.mean(np.array(Acc))
 
