@@ -84,7 +84,7 @@ if rollout:
 
 ############################# Evaluation ################################
 else:
-    if Set.find('19c') >= 0 or Set.find('20c') >= 0::
+    if Set.find('19c') >= 0 or Set.find('20c') >= 0:
         C = np.array([[-66, 80],
          [-41, 100], 
          [-62, 96], 
