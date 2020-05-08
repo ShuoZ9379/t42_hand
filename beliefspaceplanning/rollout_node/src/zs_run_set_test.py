@@ -17,9 +17,9 @@ def in_hull(p,H1,H2):
 rollout = 1
 
 comp = 'szhang'
-Set = '19c_zstest'
-#set_modes = ['astar']
-set_modes = ['naive']
+Set = '20c'
+set_modes = ['astar']
+#set_modes = ['naive']
 
 ############################# Rollout ################################
 if rollout:
@@ -75,7 +75,7 @@ if rollout:
 
             Af = A.reshape((-1,))
             Pro = []
-            for j in range(10):
+            for j in range(3):
                 print("Rollout number " + str(j) + ".")
                 Sro = np.array(rollout_srv(Af, [0,0,0,0],[obs_size]).states).reshape(-1,state_dim)                    
                 Pro.append(Sro)
@@ -84,7 +84,7 @@ if rollout:
 
 ############################# Evaluation ################################
 else:
-    if Set.find('19c') >= 0:
+    if Set.find('19c') >= 0 or Set.find('20c') >= 0::
         C = np.array([[-66, 80],
          [-41, 100], 
          [-62, 96], 
@@ -164,8 +164,10 @@ else:
 
     j = 1
     #r=8.
-    r=10.
-    if set_modes[0]=='naive':
+    if Set.find('19c') >= 0:
+        if set_modes[0]=='astar':
+            r=10.
+    else:
         r=8.
     for i in idx:
         ctr = C[i]
@@ -193,7 +195,7 @@ else:
     evaluation=1
 
     def tracking_error(S1, S2, Pro_fail):
-        if S1!='no_suc':
+        if type(S1) is not str:
             if S1.shape[0]!=S2.shape[0]:
                 raise ValueError('Success rollout path does not have the same path length as plan path.')
             else:
@@ -295,7 +297,7 @@ else:
                     obs_size='0.75'
                 if obs_size not in obs_sizes:
                     continue
-                obs_idx = obs_sizes.index(pklfile[jc:-9])
+                obs_idx = obs_sizes.index(obs_size)
                 jd = pklfile.find('run')+3         
                 je = jd + 1
                 while not (pklfile[je] == '_'):
@@ -325,7 +327,10 @@ else:
 
                 plan_path_steps = Straj.shape[0]
                 #maxX = np.max([x.shape[0] for x in Pro])
-                c = np.sum([(1 if x.shape[0]==plan_path_steps else 0) for x in Pro])
+                if set_mode=='naive':
+                    c= np.sum([(1 if x.shape[0]>=plan_path_steps-20 else 0) for x in Pro])
+                else:
+                    c = np.sum([(1 if x.shape[0]==plan_path_steps else 0) for x in Pro])
                 c = float(c) / len(Pro)*100
                 print("Finished episode success rate: " + str(c) + "%")
                 #e = np.zeros((plan_path_steps, 1))
@@ -334,10 +339,16 @@ else:
                     #if not (S.shape[0] > maxR-20):
                     #    continue
                     #Pro_suc.append(S)
-                    if S.shape[0]==plan_path_steps:
-                        Pro_suc.append(S)
+                    if set_mode=='naive':
+                        if S.shape[0]>=plan_path_steps-20:
+                            Pro_suc.append(S)
+                        else:
+                            Pro_fail.append(S)
                     else:
-                        Pro_fail.append(S)
+                        if S.shape[0]==plan_path_steps:
+                            Pro_suc.append(S)
+                        else:
+                            Pro_fail.append(S)
                 for kk in range(len(Pro_fail)):
                     S = Pro_fail[kk]
                     ii = S.shape[0]-1
@@ -364,6 +375,7 @@ else:
                 p = 0
                 for S in Pro:
                     if np.linalg.norm(S[-1,:2]-ctr) > r:
+                        print(np.linalg.norm(S[-1,:2]-ctr))
                         plt.plot(S[:,0], S[:,1], '-r')
                         plt.plot(S[-1,0], S[-1,1], 'or')
                     else:
@@ -402,8 +414,11 @@ else:
                 #print Smean.shape, Straj.shape
                 Smean = []
                 Sstd = []
+                v=1e7
+                for ps in Pro_suc:
+                    v=min(v,ps.shape[0])
                 if len(Pro_suc) > 0:
-                    for i in range(plan_path_steps):
+                    for i in range(min(v,plan_path_steps)):
                         F = []
                         for j in range(len(Pro_suc)): 
                             F.append(Pro_suc[j][i])
@@ -411,7 +426,7 @@ else:
                         Sstd.append( np.std(np.array(F), axis=0) )
                     Smean = np.array(Smean)
                     Sstd = np.array(Sstd)
-                    e, l, l_ro, l_ro_fail = tracking_error(Smean, Straj,Pro_fail)
+                    e, l, l_ro, l_ro_fail = tracking_error(Smean, Straj[:min(v,plan_path_steps)],Pro_fail)
                 else:
                     e, l, l_ro, l_ro_fail = tracking_error('no_suc', Straj,Pro_fail)
                 print("Error: " + str(e) + 'mm, plan path length: ' + str(l) + 'mm, success path length: ' + str(l_ro) + 'mm, failure path length: ' + str(l_ro_fail) + "mm.")
