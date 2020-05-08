@@ -14,10 +14,10 @@ def in_hull(p,H1,H2):
         return False
 
 
-rollout = 1
+rollout = 0
 
 comp = 'szhang'
-Set = '20c'
+Set = '20c_first'
 set_modes = ['astar']
 #set_modes = ['naive']
 
@@ -284,6 +284,7 @@ else:
                 
                 ja = pklfile.find('goal')+4
                 jb = ja + 1
+
                 while not (pklfile[jb] == '_'):
                     jb += 1
                 num = int(pklfile[ja:jb])
@@ -297,6 +298,7 @@ else:
                     obs_size='0.75'
                 if obs_size not in obs_sizes:
                     continue
+
                 obs_idx = obs_sizes.index(obs_size)
                 jd = pklfile.find('run')+3         
                 je = jd + 1
@@ -308,6 +310,7 @@ else:
                 except:
                     ctr = np.array([0,0])
                     raise ValueError('Goal Index Not Found!')
+
                #print(("Goal number %d with center: "%num), ctr)
                 print('Obstacle size ' + str(obs_size) + '; Goal Number ' + str(num) + ', with center:', ctr)
 
