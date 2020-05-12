@@ -14,7 +14,7 @@ def in_hull(p,H1,H2):
         return False
 
 
-rollout = 1
+rollout = 0
 
 comp = 'szhang'
 Sets = ['20c_10h','20c_100ac1','20c_10h_100ac1']
