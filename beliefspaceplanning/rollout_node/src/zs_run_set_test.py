@@ -76,7 +76,7 @@ if rollout:
 
                 Af = A.reshape((-1,))
                 Pro = []
-                for j in range(2):
+                for j in range(3):
                     print("Rollout number " + str(j) + ".")
                     Sro = np.array(rollout_srv(Af, [0,0,0,0],[obs_size]).states).reshape(-1,state_dim)                    
                     Pro.append(Sro)
