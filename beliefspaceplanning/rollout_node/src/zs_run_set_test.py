@@ -14,10 +14,11 @@ def in_hull(p,H1,H2):
         return False
 
 
-rollout = 0
+rollout = 1
 
 comp = 'szhang'
 Sets = ['20c_10h','20c_100ac1','20c_10h_100ac1']
+Sets = ['20c_100ac2']
 set_modes = ['astar']
 #set_modes = ['naive']
 
@@ -75,7 +76,7 @@ if rollout:
 
                 Af = A.reshape((-1,))
                 Pro = []
-                for j in range(3):
+                for j in range(2):
                     print("Rollout number " + str(j) + ".")
                     Sro = np.array(rollout_srv(Af, [0,0,0,0],[obs_size]).states).reshape(-1,state_dim)                    
                     Pro.append(Sro)
@@ -103,7 +104,8 @@ else:
              [-48, 114],
              [69, 78],
              ])
-
+        if Set.find('21c') >= 0:
+            C = np.array([[21, 123]])
             if 0:
                 np.random.seed(170)
                 n = 60
@@ -158,8 +160,8 @@ else:
         pgon = plt.Polygon(H, color='y', alpha=1, zorder=0)
         ax.add_patch(pgon)
 
-        #idx = [0, 7, 8, 15, 2]
-        idx = [0, 8, 15]
+        idx = [0, 7, 8, 15, 2]
+        #idx = [0, 8, 15]
         if set_modes[0]=='naive':
             idx=[8]
 
@@ -170,6 +172,8 @@ else:
                 r=10.
         else:
             r=8.
+        if Set.find('21c') >= 0:
+            r=5.
         for i in idx:
             ctr = C[i]
             goal_plan = plt.Circle((ctr[0], ctr[1]), r, color='m')
