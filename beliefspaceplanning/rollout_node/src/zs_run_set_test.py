@@ -14,7 +14,7 @@ def in_hull(p,H1,H2):
         return False
 
 
-rollout = 1
+rollout = 0
 
 comp = 'szhang'
 Sets = ['20c_10h','20c_100ac1','20c_10h_100ac1']
@@ -163,6 +163,7 @@ else:
 
         idx = [0, 7, 8, 15, 2]
         #idx = [0, 8, 15]
+        idx = [0]
         if set_modes[0]=='naive':
             idx=[8]
 
@@ -259,7 +260,7 @@ else:
 
         if evaluation:
             #obs_sizes=[0,0.75,1.5,3]
-            obs_sizes=['0','0.75']
+            obs_sizes=['0','0.75','0.5']
             if set_modes[0]=='naive':
                 obs_sizes=['0.75']
             new_C=[]
