@@ -18,7 +18,8 @@ rollout = 1
 
 comp = 'szhang'
 Sets = ['20c_10h','20c_100ac1','20c_10h_100ac1']
-Sets = ['20c_100ac2']
+Sets = ['20c_100ac2'
+Sets = ['set21c_100ac2_14dev_step100_weight10000']
 set_modes = ['astar']
 #set_modes = ['naive']
 
@@ -106,15 +107,15 @@ else:
              ])
         if Set.find('21c') >= 0:
             C = np.array([[21, 123]])
-            if 0:
-                np.random.seed(170)
-                n = 60
-                Obs = np.concatenate((np.random.random(size=(n,1))*160-80, np.random.random(size=(n,1))*95+50, 0.75*np.ones((n,1))), axis=1)
-                with open('/home/pracsys/catkin_ws/src/beliefspaceplanning/rollout_node/set/obs_19.pkl', 'wb') as f: 
-                    pickle.dump(Obs, f)
-            else:
-                with open('/Users/zsbjltwjj/Downloads/t42_hand/beliefspaceplanning/rollout_node/set/obs_19.pkl', 'rb') as f: 
-                    Obs = pickle.load(f,encoding='latin')
+        if 0:
+            np.random.seed(170)
+            n = 60
+            Obs = np.concatenate((np.random.random(size=(n,1))*160-80, np.random.random(size=(n,1))*95+50, 0.75*np.ones((n,1))), axis=1)
+            with open('/home/pracsys/catkin_ws/src/beliefspaceplanning/rollout_node/set/obs_19.pkl', 'wb') as f: 
+                pickle.dump(Obs, f)
+        else:
+            with open('/Users/zsbjltwjj/Downloads/t42_hand/beliefspaceplanning/rollout_node/set/obs_14.pkl', 'rb') as f: 
+                Obs = pickle.load(f,encoding='latin')
 
         fig, ax = plt.subplots(figsize=(8,3.5))
         H1=np.array([[ 88.67572021,  44.43453217],
