@@ -18,8 +18,8 @@ rollout = 1
 
 comp = 'szhang'
 Sets = ['20c_10h','20c_100ac1','20c_10h_100ac1']
-Sets = ['20c_100ac2'
-Sets = ['set21c_100ac2_14dev_step100_weight10000']
+Sets = ['20c_100ac2']
+Sets = ['21c_100ac2_14dev_step100_weight10000']
 set_modes = ['astar']
 #set_modes = ['naive']
 
