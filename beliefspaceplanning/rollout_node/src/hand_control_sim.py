@@ -61,7 +61,8 @@ class hand_control():
         self.reset_srv = rospy.ServiceProxy('/gazebo/reset_world', Empty)
 
         if self.OBS:
-            with open('/home/szhang/catkin_ws/src/beliefspaceplanning/rollout_node/set/obs_14.pkl', 'r') as f: 
+            #with open('/home/szhang/catkin_ws/src/beliefspaceplanning/rollout_node/set/obs_14.pkl', 'r') as f: 
+            with open('/home/szhang/catkin_ws/src/beliefspaceplanning/rollout_node/set/obs_20.pkl', 'r') as f: 
                 self.Obs = pickle.load(f)
 
         rate = rospy.Rate(50)

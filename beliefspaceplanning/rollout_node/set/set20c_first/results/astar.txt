@@ -1,1 +1,0 @@
-astar_goal8_run0_m100_obs0.75_plan: 0.0, 0.0

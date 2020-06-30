@@ -1,8 +1,0 @@
-Goal #,Obstacle Size,astar,astar,astar,astar,astar,astar,astar,astar,astar,astar
-,,success rate, goal reach rate, plan path length, success path length, failure path length, plan path steps, failure path steps, success path last distance to goal, failure path last distance to goal, success path RMSE relative to plan path
-0,0,70,10,73.73,84.47,91.09,685,593.6666667,3.995493704,5.58882537,7.37
-0,0.75,40,0,75.1,101.77,76.65,894,701,15.40246093,25.30461693,10.76
-8,0,100,0,53.56,57.46,-,567,-,0.793331421,-,1.98
-8,0.75,90,0,54.73,61.9,12.07,675,449,1.139094054,40.77772709,2.79
-15,0,0,0,77.89,-,97.58,788,680.1,-,6.579506062,-
-15,0.75,0,0,79.29,-,70.92,891,639.7,-,24.54017441,-

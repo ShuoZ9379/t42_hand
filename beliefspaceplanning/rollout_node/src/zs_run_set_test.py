@@ -17,10 +17,12 @@ def in_hull(p,H1,H2):
 rollout = 0
 
 comp = 'szhang'
-Sets = ['20c_10h','20c_100ac1','20c_10h_100ac1']
 Sets = ['20c_100ac2']
 Sets = ['21c_100ac2_14dev_step100_weight10000']
+Sets = ['20c_policy']
 set_modes = ['astar']
+set_modes = ['policy']
+set_modes = ['policy_OBS']
 #set_modes = ['naive']
 
 ############################# Rollout ################################
@@ -56,11 +58,11 @@ if rollout:
                 while not (pklfile[jb] == '_'):
                     jb += 1
                 num = int(pklfile[ja:jb])
-                if set_mode=='astar':
-                    jc = pklfile.find('obs')+3
-                    obs_size = float(pklfile[jc:-9])
-                else:
-                    obs_size=0.75
+                #if set_mode=='astar':
+                jc = pklfile.find('obs')+3
+                obs_size = float(pklfile[jc:-9])
+                #else:
+                #    obs_size=0.75
                 jd = pklfile.find('run')+3         
                 je = jd + 1
                 while not (pklfile[je] == '_'):
@@ -114,8 +116,12 @@ else:
             with open('/home/pracsys/catkin_ws/src/beliefspaceplanning/rollout_node/set/obs_19.pkl', 'wb') as f: 
                 pickle.dump(Obs, f)
         else:
-            with open('/Users/zsbjltwjj/Downloads/t42_hand/beliefspaceplanning/rollout_node/set/obs_14.pkl', 'rb') as f: 
-                Obs = pickle.load(f,encoding='latin')
+            if Set.find('19c') >= 0 or Set.find('20c') >= 0:
+                with open('/Users/zsbjltwjj/Downloads/t42_hand/beliefspaceplanning/rollout_node/set/obs_20.pkl', 'rb') as f: 
+                    Obs = pickle.load(f,encoding='latin')
+            elif Set.find('21c')>=0:
+                with open('/Users/zsbjltwjj/Downloads/t42_hand/beliefspaceplanning/rollout_node/set/obs_14.pkl', 'rb') as f: 
+                    Obs = pickle.load(f,encoding='latin')
 
         fig, ax = plt.subplots(figsize=(8,3.5))
         H1=np.array([[ 88.67572021,  44.43453217],
@@ -161,20 +167,21 @@ else:
         pgon = plt.Polygon(H, color='y', alpha=1, zorder=0)
         ax.add_patch(pgon)
 
-        idx = [0, 7, 8, 15, 2]
-        #idx = [0, 8, 15]
-        idx = [0]
-        if set_modes[0]=='naive':
-            idx=[8]
+        if Set.find('19c') >= 0 or Set.find('20c') >= 0:
+            idx = [0, 7, 8, 15, 2]
+        elif Set.find('21c')>=0:
+            idx = [0]
+        #if 'naive' in set_modes:
+        #    idx=[8]
 
         j = 1
-        #r=8.
-        if Set.find('19c') >= 0:
-            if set_modes[0]=='astar':
-                r=10.
-        else:
+        #if Set.find('19c') >= 0:
+        #    if set_modes[0]=='astar':
+        #        r=10.
+        #else:
+        if Set.find('20c') >= 0:
             r=8.
-        if Set.find('21c') >= 0:
+        elif Set.find('21c') >= 0:
             r=5.
         for i in idx:
             ctr = C[i]
@@ -261,8 +268,8 @@ else:
         if evaluation:
             #obs_sizes=[0,0.75,1.5,3]
             obs_sizes=['0','0.75','0.5']
-            if set_modes[0]=='naive':
-                obs_sizes=['0.75']
+            #if set_modes[0]=='naive':
+            #    obs_sizes=['0.75']
             new_C=[]
             for i in idx:
                 new_C.append(C[i])
@@ -298,11 +305,11 @@ else:
                     if num not in idx:
                         continue
                     goal_idx=idx.index(num)
-                    if set_mode=='astar':
-                        jc = pklfile.find('obs')+3
-                        obs_size = pklfile[jc:-9]
-                    else:
-                        obs_size='0.75'
+                    #if set_mode=='astar':
+                    jc = pklfile.find('obs')+3
+                    obs_size = pklfile[jc:-9]
+                    #else:
+                    #    obs_size='0.75'
                     if obs_size not in obs_sizes:
                         continue
 
@@ -337,10 +344,10 @@ else:
 
                     plan_path_steps = Straj.shape[0]
                     #maxX = np.max([x.shape[0] for x in Pro])
-                    if set_mode=='naive':
-                        c= np.sum([(1 if x.shape[0]>=plan_path_steps-20 else 0) for x in Pro])
-                    else:
-                        c = np.sum([(1 if x.shape[0]==plan_path_steps else 0) for x in Pro])
+                    #if set_mode=='naive':
+                    #    c= np.sum([(1 if x.shape[0]>=plan_path_steps-20 else 0) for x in Pro])
+                    #else:
+                    c = np.sum([(1 if x.shape[0]==plan_path_steps else 0) for x in Pro])
                     c = float(c) / len(Pro)*100
                     print("Finished episode success rate: " + str(c) + "%")
                     #e = np.zeros((plan_path_steps, 1))
@@ -349,16 +356,16 @@ else:
                         #if not (S.shape[0] > maxR-20):
                         #    continue
                         #Pro_suc.append(S)
-                        if set_mode=='naive':
-                            if S.shape[0]>=plan_path_steps-20:
-                                Pro_suc.append(S)
-                            else:
-                                Pro_fail.append(S)
+                        #if set_mode=='naive':
+                        #    if S.shape[0]>=plan_path_steps-20:
+                        #        Pro_suc.append(S)
+                        #    else:
+                        #        Pro_fail.append(S)
+                        #else:
+                        if S.shape[0]==plan_path_steps:
+                            Pro_suc.append(S)
                         else:
-                            if S.shape[0]==plan_path_steps:
-                                Pro_suc.append(S)
-                            else:
-                                Pro_fail.append(S)
+                            Pro_fail.append(S)
                     for kk in range(len(Pro_fail)):
                         S = Pro_fail[kk]
                         ii = S.shape[0]-1
@@ -460,9 +467,9 @@ else:
                     plt.axis('equal')
 
                     if 1:# num == 0:
-                        if set_mode=='astar':
-                            Pastar.append(p)
-                            Acastar.append(e)
+                        #if set_mode=='astar':
+                        Pastar.append(p)
+                        Acastar.append(e)
                         #if set_mode == 'naive_goal':
                         #    Pn.append(p)
                         #    Acn.append(e)
@@ -489,31 +496,32 @@ else:
                 goal_idx=loc // len(obs_sizes)
                 obs_idx=loc %  len(obs_sizes)
                 return idx[goal_idx],obs_sizes[obs_idx]
-            if set_modes[0]!='naive':
-                download_dir = results_path + '/summary.csv' 
-                csv = open(download_dir, "w") 
-                csv.write("Goal #,Obstacle Size,")
-                for key in Sum.keys():
-                    for _ in range(Sum[key].shape[1]):
-                        csv.write(key + ',')
-                csv.write('\n')
-                csv.write(',,')
-                for key in Sum.keys():
-                    csv.write('success rate, goal reach rate, plan path length, success path length, failure path length, plan path steps, failure path steps, success path last distance to goal, failure path last distance to goal, success path RMSE relative to plan path,')
-                csv.write('\n')
-                for loc in range(len(obs_sizes)*len(idx)):
-                    goal,obs_size=convert_to_goal_and_obs(loc,idx,obs_sizes)
-                    csv.write(str(goal) + ',')
-                    csv.write(obs_size + ',')
-                    for key in Sum.keys():
-                        for j in range(Sum[key].shape[1]):
-                            if Sum[key][loc, j]==-1:
-                                csv.write('-,')
-                            else:
-                                csv.write(str(Sum[key][loc, j]) + ',')
-                    csv.write('\n')
 
-                print("Astar: ")
+            #if set_modes[0]!='naive':
+            download_dir = results_path + '/summary.csv' 
+            csv = open(download_dir, "w") 
+            csv.write("Goal #,Obstacle Size,")
+            for key in Sum.keys():
+                for _ in range(Sum[key].shape[1]):
+                    csv.write(key + ',')
+            csv.write('\n')
+            csv.write(',,')
+            for key in Sum.keys():
+                csv.write('success rate, goal reach rate, plan path length, success path length, failure path length, plan path steps, failure path steps, success path last distance to goal, failure path last distance to goal, success path RMSE relative to plan path,')
+            csv.write('\n')
+            for loc in range(len(obs_sizes)*len(idx)):
+                goal,obs_size=convert_to_goal_and_obs(loc,idx,obs_sizes)
+                csv.write(str(goal) + ',')
+                csv.write(obs_size + ',')
+                for key in Sum.keys():
+                    for j in range(Sum[key].shape[1]):
+                        if Sum[key][loc, j]==-1:
+                            csv.write('-,')
+                        else:
+                            csv.write(str(Sum[key][loc, j]) + ',')
+                csv.write('\n')
+
+                print(set_modes[0]+": ")
                 print("Mean success rate: ", np.mean(np.array(Pastar)))
                 print("Mean error: ", np.mean(np.array(Acastar)))
                 #print "Naive: "

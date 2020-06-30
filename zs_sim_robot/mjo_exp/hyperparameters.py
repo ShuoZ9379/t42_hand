@@ -1,0 +1,7 @@
+max_num_trans=1000000
+cl_max_num_steps=10000
+use_partial_state=True
+
+
+cl_num_episodes=100
+cl_min_num_steps=3000

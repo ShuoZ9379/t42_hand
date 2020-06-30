@@ -135,7 +135,7 @@ class hand_control():
         self.base_tvec=np.array(msg.data)
 
     def callbackMarkers(self, msg):
-        self.obj_pos = np.array([msg.position.x, msg.position.y, msg.position.y])
+        self.obj_pos = np.array([msg.position.x, msg.position.y, msg.position.z])
         self.obj_height = msg.position.z
 
     def callbackObjectDrop(self, msg):
