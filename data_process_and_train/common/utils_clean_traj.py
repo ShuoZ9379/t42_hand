@@ -5,6 +5,7 @@ import torch.utils.data
 from common.data_normalization import *
 import random
 import pickle
+from tqdm import tqdm
 
 import matplotlib.pyplot as plt
 
@@ -70,7 +71,7 @@ def pointwise(states, true_states, scaling = True):
 
 class TrajModelTrainer():
     def __init__(self, episodes, test_episodes, val_size=0, model_save_path=None, error_save_path=None, save_path = None, state_dim = 4, 
-            action_dim = 6, avi=False, save=True):
+            action_dim = 6, save=True):
         self.task_ofs = state_dim+action_dim
         self.state_dim = state_dim
         self.new_state_dim = state_dim
@@ -91,7 +92,7 @@ class TrajModelTrainer():
         else:
             self.val_episodes=None
             self.episodes=episodes
-            self.norm, data, test_data= self.get_norms(episodes, val_size, test_episodes, avi)
+            self.norm, data, test_data= self.get_norms(episodes, val_size, test_episodes)
         self.x_data, self.y_data = data
         self.x_test_data, self.y_test_data = test_data
 
@@ -116,7 +117,7 @@ class TrajModelTrainer():
             train_loss_ls,val_loss_ls,test_loss_ls=[],[],[]
 
         x_mean_arr, x_std_arr, y_mean_arr, y_std_arr = self.norm
-        for i in range(epochs):
+        for i in tqdm(range(epochs)):
             total_train_loss=0
             model.train()
             for batch_ndx, sample in enumerate(loader):
@@ -146,19 +147,16 @@ class TrajModelTrainer():
                 test_loss = loss_fn(test_output, self.y_test_data) 
                 test_loss_ls.append(test_loss.item())
                 if self.val_size and i % every_plot==0:
-                    if 'avi' not in self.model_save_path:
-                        loss_print="average_validation_loss: " + str(val_loss.item())+" ,average_test_loss: " + str(test_loss.item())
-                    else:
-                        loss_print="average_validation_loss: " + str(val_loss.item())
+                    loss_print="average_validation_loss: " + str(val_loss.item())+" ,average_test_loss: " + str(test_loss.item())
                     print(loss_print)
-                elif i % every_plot==0 and 'avi' not in self.model_save_path:
+                elif i % every_plot==0:
                     print("average_test_loss: " + str(test_loss.item()))      
             if (i+1) % epoch_save_interval ==0:
                 with open(self.model_save_path+'_epochs_'+str(i+1), 'wb') as pickle_file:
                     torch.save(model, pickle_file)
-        #if self.save:
-        #with open(self.model_save_path, 'wb') as pickle_file:
-        #    torch.save(model, pickle_file)
+        if self.save:
+            with open(self.model_save_path, 'wb') as pickle_file:
+                torch.save(model, pickle_file)
         with open(self.error_save_path, 'wb') as pickle_file:
             pickle.dump([train_loss_ls,val_loss_ls,test_loss_ls],pickle_file)
         return train_loss_ls,val_loss_ls,test_loss_ls
@@ -180,7 +178,7 @@ class TrajModelTrainer():
         plt.show()
 
 
-    def get_norms(self, episodes, val_size, test_episodes,avi):
+    def get_norms(self, episodes, val_size, test_episodes):
         full_dataset = episodes
 
         FULL_DATA = np.concatenate(full_dataset)
@@ -223,12 +221,8 @@ class TrajModelTrainer():
         x_test_data = z_score_normalize(x_test_data, x_mean_arr, x_std_arr)
         y_test_data = z_score_normalize(y_test_data, y_mean_arr, y_std_arr)
         if self.save_path:
-            if avi:
-                with open(self.save_path+'normalization/avi_normalization_arr', 'wb') as pickle_file:
-                    pickle.dump(((x_mean_arr, x_std_arr),(y_mean_arr, y_std_arr)), pickle_file)
-            else:
-                with open(self.save_path+'normalization/normalization_arr', 'wb') as pickle_file:
-                    pickle.dump(((x_mean_arr, x_std_arr),(y_mean_arr, y_std_arr)), pickle_file)
+            with open(self.save_path+'normalization/normalization_arr', 'wb') as pickle_file:
+                pickle.dump(((x_mean_arr, x_std_arr),(y_mean_arr, y_std_arr)), pickle_file)
 
         x_data = torch.tensor(x_data, dtype=self.dtype)
         y_data = torch.tensor(y_data, dtype=self.dtype)

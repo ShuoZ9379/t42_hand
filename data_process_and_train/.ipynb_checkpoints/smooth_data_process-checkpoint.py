@@ -3,44 +3,45 @@
 #valid rmat and tvec should not change much during one idx of collection
 from process_params import *
 from sys import argv
-#argv idx1 idx2 idx3 idx4 idx5 ..., filter_size, recali, include init state,  not remove d), interval, not remove e), length_e, not remove b), not remove c), ne, suffxi(v1_,avi_,...)
+#argv idx1 idx2 idx3 idx4 idx5 ..., filter_size, not recali, include init state,  not remove d), interval, not remove e), length_e, not remove b), not remove c), ne, suffxi(v1_,avi_,...)
+#python3 smooth_data_process.py 20 1 1 0 10 0 100 0 1 ne v0.1_
 mix=False
 mix_idx_ls=[]
-filter_size=10
+filter_size=40
 not_recali=True
 include_init=True
-not_remove_d=True
+not_remove_d=False
 interval=10
-not_remove_e=True
+not_remove_e=False
 length_e=100
-not_remove_b=True
+not_remove_b=False
 not_remove_c=True
 train_mode='ne'
 suffix=''
 if len(argv)>3:
     if argv[-2][-1]!='e':
         filter_size=int(argv[-9])
-        not_recali=bool(argv[-8])
-        include_init=bool(argv[-7])
-        not_remove_d=bool(argv[-6])
+        not_recali=int(argv[-8])
+        include_init=int(argv[-7])
+        not_remove_d=int(argv[-6])
         interval=int(argv[-5])
-        not_remove_e=bool(argv[-4])
+        not_remove_e=int(argv[-4])
         length_e=int(argv[-3])
-        not_remove_b=bool(argv[-2])
-        not_remove_c=bool(argv[-1])
+        not_remove_b=int(argv[-2])
+        not_remove_c=int(argv[-1])
         mix_idx_ls=[int(argv[i+1]) for i in range(len(argv)-10)]
     else:
         filter_size=int(argv[-11])
-        not_recali=bool(argv[-10])
-        include_init=bool(argv[-9])
-        not_remove_d=bool(argv[-8])
+        not_recali=int(argv[-10])
+        include_init=int(argv[-9])
+        not_remove_d=int(argv[-8])
         interval=int(argv[-7])
-        not_remove_e=bool(argv[-6])
+        not_remove_e=int(argv[-6])
         length_e=int(argv[-5])
-        not_remove_b=bool(argv[-4])
-        not_remove_c=bool(argv[-3])
+        not_remove_b=int(argv[-4])
+        not_remove_c=int(argv[-3])
         train_mode=argv[-2]
-        suffix=argv[-2]
+        suffix=argv[-1]
         mix_idx_ls=[int(argv[i+1]) for i in range(len(argv)-12)]
     if mix_idx_ls==[]:
         mix=False
@@ -79,10 +80,12 @@ def convert_to_nparr(memory,color):
 def get_transformed_states(states,rmat,tvec,color):
     transformed_states=np.zeros((states.shape[0],17))
     corner_pos=np.zeros((states.shape[0],2))
-    transformed_states[:,1]=-rmat.T.dot((states[:,12:15]-tvec).T).T[:,0]
-    transformed_states[:,0]=rmat.T.dot((states[:,12:15]-tvec).T).T[:,1]
     corner_pos[:,1]=-rmat.T.dot((states[:,15:18]-tvec).T).T[:,0]
     corner_pos[:,0]=rmat.T.dot((states[:,15:18]-tvec).T).T[:,1]
+    corner_z=(rmat.T.dot((states[:,15:18]-tvec).T).T[:,2]).reshape(-1,1)
+    states[:,14:15]=(corner_z-((states[:,12:14]-tvec[:2]).dot(rmat.T[-1,:2].reshape(2,1))))/rmat.T[-1,-1]+tvec[2]
+    transformed_states[:,1]=-rmat.T.dot((states[:,12:15]-tvec).T).T[:,0]
+    transformed_states[:,0]=rmat.T.dot((states[:,12:15]-tvec).T).T[:,1]
     transformed_states[:,2]=np.arctan2(corner_pos[:,1]-transformed_states[:,1],corner_pos[:,0]-transformed_states[:,0])
     for i in range(4):
         transformed_states[:,4+2*i]=-rmat.T.dot((states[:,18+3*i:21+3*i]-tvec).T).T[:,0]
@@ -288,9 +291,9 @@ def f_check_valid(states,checks,not_remove_b,not_remove_c):
     non_equal=np.sum(prev_all-nxt_all==0,1)
     final_valid_idx_ls=check_valid(checks)==1
     if not not_remove_b:
-        final_valid_idx_ls=final_valid_idx_ls+((conti==1).astype(int)==2)
+        final_valid_idx_ls=(final_valid_idx_ls+(conti==1).astype(int))==2
     if not not_remove_c:
-        final_valid_idx_ls=final_valid_idx_ls+((non_equal!=4).astype(int))
+        final_valid_idx_ls=(final_valid_idx_ls+(non_equal!=4).astype(int))==2
     return final_valid_idx_ls
 
 def check_nonvalid_end(indices_arr,train_states,interval):
@@ -388,7 +391,7 @@ for i in range(len(train_paths)):
         memory_for_cali=memory+test_memory
     else:
         memory_for_cali=memory
-    cali_path=cali_dir+'/'+data_mode+'_'+suffix+'_'+idx+'.cali' 
+    cali_path=cali_dir+'/'+data_mode+'_'+suffix+idx+'.cali' 
     if do_cali:
         cali_info=cali(memory_for_cali,cali_path)
     else:
@@ -492,7 +495,7 @@ for i in range(len(test_paths)):
     idx=test_paths[i][-5]
     with open(test_paths[i],'rb') as filehandler:
         test_memory=pickle.load(filehandler,encoding='latin1')
-    cali_path=cali_dir+'/'+suffix+idx+'.cali'
+    cali_path=cali_dir+'/'+data_mode+'_'+suffix+idx+'.cali' 
     with open(cali_path,'rb') as f:
         cali_info=np.array(pickle.load(f))
     rmat=cali_info[:9].reshape(3,3)

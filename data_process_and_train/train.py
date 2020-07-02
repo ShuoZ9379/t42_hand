@@ -36,7 +36,8 @@ if len(argv)>3:
     if len(argv)>9:
         dm=argv[9]
         train_mode=argv[10]
-        suffix=argv[11]
+        if len(argv)>11:
+            suffix=argv[11]
 data_mode=data_mode[:-2]+dm
     
 retrain=False

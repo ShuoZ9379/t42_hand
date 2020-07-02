@@ -8,16 +8,18 @@ import matplotlib.pyplot as plt
 import glob,pickle,os,copy,sys,random
 from sys import argv
 from process_params import *
-# argv lr heldout nntype seed dropout nodes epoch nm ne suffix(avi_, avi_v1_, ...)
+# argv lr heldout nntype seed dropout nodes epoch nm ne suffix(avi_, avi_v1_, ...) combined_train
 
 seed=0
 nn_type = '2'
 held_out = .0
-lr = .001
-dropout_rate = .0
+lr = .0001
+dropout_rate = .1
 nodes=200
 ep=50
 suffix='avi_'
+dm='nm'
+combined_train=True
 if len(argv)>3:
     lr=float(argv[1])
     held_out=float(argv[2])
@@ -30,20 +32,30 @@ if len(argv)>3:
         dm=argv[8]
         train_mode=argv[9]
         suffix=argv[10]
+        combined_train=argv[11]
 data_mode=data_mode[:-2]+dm
 if train_separate:
-    #test_ds_path=base_path+color+'_data/'+obj+'/test/avi_test_separate_'+data_type+data_mode
-    test_ds_path=base_path+color+'_data/'+obj+'/test/avi_test_separate_'+data_type+data_mode+'_'+suffix+'f'
+    train_ds_path=base_path+color+'_data/'+obj+'/train_separate_'+data_type+data_mode+'_'+suffix+'f'
+    test_ds_path=base_path+color+'_data/'+obj+'/test/test_separate_'+data_type+data_mode+'_'+suffix+'f'
 #Assume episodes are always separated
 else:
     raise    
 
 with open(test_ds_path, 'rb') as pickle_file:
      test_ds_ls,test_ds_all_ls,state_dim,action_dim,test_traj_gt_ls,real_test_actions_ls = pickle.load(pickle_file)
+with open(train_ds_path, 'rb') as pickle_file:
+     train_ds_ls,train_ds_all_ls,state_dim,action_dim,train_traj_gt_ls,real_train_actions_ls = pickle.load(pickle_file)
 task_ofs = state_dim + action_dim
+
+if combined_train:
+    test_ds_all_ls+=train_ds_all_ls
+    real_test_actions_ls+=real_train_action_ls
+    test_ds_ls+=train_ds_ls
+
 test_ds_all = [torch.tensor(data, dtype=dtype) for data in test_ds_all_ls]
 real_test_actions=[torch.tensor(ac, dtype=dtype) for ac in real_test_actions_ls]
 test_eps_len=[ep.shape[0] for ep in test_ds_ls]
+
 print("Rolling out " + str(len(test_ds_ls)) + "test trajectories.")
 
 cuda = False
@@ -55,7 +67,7 @@ pred_path = dm+'_'+train_mode+'_'+suffix+'pred_fig_f/'
 if not os.path.exists(pred_path):
     os.makedirs(pred_path)
 model_save_path = save_path + 'model_lr' + str(lr)+ '_' +'val' + str(held_out)+ '_' + 'seed' + str(seed) + '_nn_' + nn_type + '_dp_' + str(dropout_rate)+'_nodes_'+str(nodes) 
-model_save_path += '_epochs_'+str(ep)
+#model_save_path += '_epochs_'+str(ep)
 pred_fig_path = pred_path + 'traj_lr' + str(lr)+ '_' +'val' + str(held_out)+ '_' + 'seed' + str(seed) + '_nn_' + nn_type + '_dp_' + str(dropout_rate)+'_nodes_'+str(nodes)
 
 with open(model_save_path, 'rb') as pickle_file:

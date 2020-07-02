@@ -59,10 +59,12 @@ def convert_to_nparr(memory,color):
 def get_transformed_states(states,rmat,tvec,color):
     transformed_states=np.zeros((states.shape[0],17))
     corner_pos=np.zeros((states.shape[0],2))
-    transformed_states[:,1]=-rmat.T.dot((states[:,12:15]-tvec).T).T[:,0]
-    transformed_states[:,0]=rmat.T.dot((states[:,12:15]-tvec).T).T[:,1]
     corner_pos[:,1]=-rmat.T.dot((states[:,15:18]-tvec).T).T[:,0]
     corner_pos[:,0]=rmat.T.dot((states[:,15:18]-tvec).T).T[:,1]
+    corner_z=(rmat.T.dot((states[:,15:18]-tvec).T).T[:,2]).reshape(-1,1)
+    states[:,14:15]=(corner_z-((states[:,12:14]-tvec[:2]).dot(rmat.T[-1,:2].reshape(2,1))))/rmat.T[-1,-1]+tvec[2]
+    transformed_states[:,1]=-rmat.T.dot((states[:,12:15]-tvec).T).T[:,0]
+    transformed_states[:,0]=rmat.T.dot((states[:,12:15]-tvec).T).T[:,1]
     transformed_states[:,2]=np.arctan2(corner_pos[:,1]-transformed_states[:,1],corner_pos[:,0]-transformed_states[:,0])
     for i in range(4):
         transformed_states[:,4+2*i]=-rmat.T.dot((states[:,18+3*i:21+3*i]-tvec).T).T[:,0]

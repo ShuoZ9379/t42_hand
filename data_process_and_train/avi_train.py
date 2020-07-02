@@ -11,7 +11,7 @@ import glob,pickle,os,copy,sys,random
 from sys import argv
 from process_params import *
 #argv lr heldout nntype seed dropout nodes epochs epoch_save_interval nm ne suffix(avi_, avi_v1_, ...)
-
+#python3 avi_train.py 0.0001 0.1 2 0 0.1 200 50 1 nm ne avi_
 
 seed=0
 nn_type = '2'
@@ -20,7 +20,7 @@ lr = .001
 dropout_rate = .0
 nodes=200
 epochs=100
-epoch_save_interval=10
+epoch_save_interval=1
 dm='nm'
 train_mode='ne'
 suffix=''
@@ -81,11 +81,11 @@ if not os.path.exists(error_fig_path):
     os.makedirs(error_fig_path)
 if not os.path.exists(save_path+'normalization/'):
     os.makedirs(save_path+'normalization/')
-if not os.path.exists(save_path+'avi_error/'):
+if not os.path.exists(save_path+'error/'):
     os.makedirs(save_path+'error/')
 model_save_path = save_path + 'model_lr' + str(lr)+ '_' +'val' + str(held_out)+ '_' + 'seed' + str(seed) + '_nn_' + nn_type + '_dp_' + str(dropout_rate) +'_nodes_'+str(nodes)
 error_save_path = save_path + 'error/err_lr' + str(lr)+ '_' +'val' + str(held_out)+ '_' + 'seed' + str(seed) + '_nn_' + nn_type + '_dp_' + str(dropout_rate)+'_nodes_'+str(nodes)
-trainer = TrajModelTrainer(out, test_out, val_size=val_size, model_save_path=model_save_path, error_save_path=error_save_path, save_path=save_path, state_dim=state_dim, action_dim=action_dim,avi=True) 
+trainer = TrajModelTrainer(out, test_out, val_size=val_size, model_save_path=model_save_path, error_save_path=error_save_path, save_path=save_path, state_dim=state_dim, action_dim=action_dim) 
 norm=trainer.norm
 
 if retrain:
@@ -125,7 +125,7 @@ plt.ylabel("Loss")
 plt.legend()
 fig.set_size_inches(10,10)
 fig.savefig(error_fig_path+'Loss_lr' + str(lr)+ '_' +'val' + str(held_out)+ '_' + 'seed' + str(seed) + '_nn_' + nn_type + '_dp_' + str(dropout_rate)+'_nodes_'+str(nodes)+'.png')
-
+'''
 fig = plt.figure()
 plt.plot(train_loss_ls, color='k', label='Train Loss')
 plt.xlabel("Training Epochs")
@@ -133,3 +133,4 @@ plt.ylabel("Loss")
 plt.legend()
 fig.set_size_inches(10,10)
 fig.savefig(error_fig_path+'Train_Loss_lr' + str(lr)+ '_' +'val' + str(held_out)+ '_' + 'seed' + str(seed) + '_nn_' + nn_type + '_dp_' + str(dropout_rate)+'_nodes_'+str(nodes)+'.png')
+'''
