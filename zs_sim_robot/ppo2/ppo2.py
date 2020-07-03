@@ -22,7 +22,8 @@ if not os.path.exists('./ppo2_results/single_loss/'):
     os.makedirs('./ppo2_results/single_loss/')
 if not os.path.exists('./ppo2_results/test_ah_single_loss_withreachgoal_ctrl1/'):
     os.makedirs('./ppo2_results/test_ah_single_loss_withreachgoal_ctrl1/')
-
+if not os.path.exists('./ppo2_results/test_real_ah_single_loss_withreachgoal_ctrl1/'):
+    os.makedirs('./ppo2_results/test_real_ah_single_loss_withreachgoal_ctrl1/')
 
 def constfn(val):
     def f(_):
@@ -33,7 +34,7 @@ def constfn(val):
 def safemean(xs):
     return np.nan if len(xs) == 0 else np.mean(xs)
 
-def learn(*, network, env, env_type, total_timesteps, eval_env = None, need_eval=False, num_eval_eps=1, compare=False,compare_ah_idx=8,reacher_sd=1,acrobot_sd=1,
+def learn(*, network, env, env_type, total_timesteps, eval_env = None, need_eval=False, num_eval_eps=1, compare=False,compare_ah_idx=8,reacher_sd=1,acrobot_sd=1,compare_real_ah_idx=2,
             seed=None, nsteps=2048, ent_coef=0.0, lr=3e-4,lr_factor=3,
             vf_coef=0.5,  max_grad_norm=0.5, gamma=0.99, lam=0.95,
             log_interval=1, nminibatches=4, noptepochs=4, cliprange=0.2,
@@ -96,6 +97,9 @@ def learn(*, network, env, env_type, total_timesteps, eval_env = None, need_eval
     if env_type=='corl' and env.env_name=='ah':
         if not os.path.exists('./ppo2_results/test_ah_single_loss'+single_loss_suf+'/'):
             os.makedirs('./ppo2_results/test_ah_single_loss'+single_loss_suf+'/')
+    if env_type=='corl' and env.env_name=='real_ah':
+        if not os.path.exists('./ppo2_results/test_real_ah_single_loss'+single_loss_suf+'/'):
+            os.makedirs('./ppo2_results/test_real_ah_single_loss'+single_loss_suf+'/')
 
     if env_type=='corl':
         lr_final=lr_factor*1e-4
@@ -234,7 +238,7 @@ def learn(*, network, env, env_type, total_timesteps, eval_env = None, need_eval
             plt.plot(eprewmean_ls)
             plt.ylabel('Average Return Over 100 Episodes')
             plt.xlabel('PPO Updates')
-            if env_type=='corl' and env.env_name=='ah':
+            if env_type=='corl' and (env.env_name=='ah' or env.env_name=='real_ah'):
                 if env.with_obs:
                     suf='_obs_idx_'+str(env.obs_idx)
                     o_i=env.obs_idx
@@ -266,10 +270,10 @@ def learn(*, network, env, env_type, total_timesteps, eval_env = None, need_eval
                 plt.savefig('./ppo2_results/single_loss_bkup/'+env.env_name+'_single_seed_'+str(seed)+suf+'_loss.png')
             else:
                 #plt.savefig('./ppo2_results/single_loss/'+env.env_name+'_single_seed_'+str(seed)+suf+'_loss.png')
-                plt.savefig('./ppo2_results/test_ah_single_loss'+single_loss_suf+'/'+env.env_name +'_lr_'+str(lr_factor)+'_total_timesteps_'+str(total_timesteps)+'_single_seed_'+str(seed)+suf+'_loss.png')
+                plt.savefig('./ppo2_results/test_'+env.env_name+'_single_loss'+single_loss_suf+'/'+env.env_name +'_lr_'+str(lr_factor)+'_total_timesteps_'+str(total_timesteps)+'_single_seed_'+str(seed)+suf+'_loss.png')
             
         if env_type=='corl':
-            if env.env_name=='ah':
+            if env.env_name=='ah' or env.env_name=='real_ah':
                 best_update=np.argmax(eprewmean_ls)
                 best_update_a=best_update-1
                 #best_model=models_ls[best_update]
@@ -296,7 +300,7 @@ def learn(*, network, env, env_type, total_timesteps, eval_env = None, need_eval
             lrnow = lr(1.0)
             cliprangenow = cliprange(1.0)
             logger.info('Evaluation: Stepping environment...')
-            obs, returns, masks, actions, values, neglogpacs, states, epinfos, final_obs = runner.run(do_eval=True,num_eval_eps=num_eval_eps,compare=compare,compare_ah_idx=compare_ah_idx,reacher_sd=reacher_sd,acrobot_sd=acrobot_sd) #pylint: disable=E0632
+            obs, returns, masks, actions, values, neglogpacs, states, epinfos, final_obs = runner.run(do_eval=True,num_eval_eps=num_eval_eps,compare=compare,compare_ah_idx=compare_ah_idx,reacher_sd=reacher_sd,acrobot_sd=acrobot_sd,compare_real_ah_idx=compare_real_ah_idx) #pylint: disable=E0632
             logger.info('Evaluation: Done.')
             do_eval_epinfobuf=deque(maxlen=100)
             do_eval_epinfobuf.extend(epinfos)
@@ -337,6 +341,8 @@ def learn(*, network, env, env_type, total_timesteps, eval_env = None, need_eval
                     plot_eval_eps(seed,observ,env,reacher_sd,compare)
                 elif env.env_name=='corl_Acrobot-v1':
                     plot_eval_eps(seed,observ,env,acrobot_sd,compare)
+                elif env.env_name=='real_ah':
+                    plot_eval_eps(seed,observ,env,compare_real_ah_idx,compare,pre_suf=single_loss_suf)
     return model
 
 def plot_eval_eps(seed,observ,env,idx,compare,pre_suf=''):
@@ -417,6 +423,52 @@ def plot_eval_eps(seed,observ,env,idx,compare,pre_suf=''):
             plt.savefig('./ppo2_results/eval/Eval_model_seed_'+str(seed)+'_lr_'+str(lr_factor)+'_total_timesteps_'+str(total_timesteps)+'_goal_height_'+str(env.goal_height)+'_'+env.env_name+'_'+str(idx)+pre_suf+'_not_compare.png',dpi=200)
         else:
             plt.savefig('./ppo2_results/eval/Eval_model_seed_'+str(seed)+'_lr_'+str(lr_factor)+'_total_timesteps_'+str(total_timesteps)+'_goal_height_'+str(env.goal_height)+'_'+env.env_name+'_'+str(idx)+pre_suf+'_compare.png',dpi=200)
+    
+    elif env.env_name=='real_ah':
+        if env.state_with_goal_loc:
+            goal_loc=observ[0,4:6]
+            if env.state_with_goal_radius:
+                big_goal_radius=goal_loc[0,6]/0.6875
+            else:
+                big_goal_radius=env.goal_radius/0.6875
+        else:
+            goal_loc=env.goal_loc
+            big_goal_radius=env.goal_radius/0.6875
+        fig, ax = plt.subplots(figsize=(10,3))
+        goal_plan = plt.Circle((goal_loc[0], goal_loc[1]), big_goal_radius*0.6875, color='m')
+        #goal_plan = plt.Circle((goal_loc[0], goal_loc[1]), big_goal_radius, color='m')
+        ax.add_artist(goal_plan)
+        if env.with_obs:
+            for o in env.Obs:
+                obs = plt.Circle(o[:2], env.obs_dist, color=[0.4,0.4,0.4])
+                ax.add_artist(obs)
+        plt.plot(round(env.init_mu[0]), round(env.init_mu[1]), 'o', markersize=16, color ='r')
+        plt.plot(observ[:,0],observ[:,1],'-k')
+        plt.xlim([-40, 80])
+        #plt.xlim([-60, 120])
+        plt.ylim([70, 120])
+        #plt.ylim([50, 120])
+        plt.xlabel('x')
+        plt.ylabel('y')
+        if not compare:
+            suffix='_not'
+        else:
+            suffix=''
+        if env.with_obs:
+            if env.obs_idx==20 and env.state_with_goal_loc:
+                goal_loc_suffix='_withobs_with_goal_loc'
+            else:
+                goal_loc_suffix='_withobs_without_goal_loc'
+        else:
+            if env.state_with_goal_loc:
+                goal_loc_suffix='_noobs_with_goal_loc'
+            else:
+                goal_loc_suffix='_noobs_without_goal_loc'
+        if env.with_obs:
+            plt.savefig('./ppo2_results/eval/Eval_model_seed_'+str(seed)+'_lr_'+str(lr_factor)+'_total_timesteps_'+str(total_timesteps)+'_obs_idx_'+str(env.obs_idx)+goal_loc_suffix+'_'+env.env_name+'_'+str(idx)+pre_suf+suffix+'_compare.png',dpi=200)
+        else:
+            plt.savefig('./ppo2_results/eval/Eval_model_seed_'+str(seed)+'_lr_'+str(lr_factor)+'_total_timesteps_'+str(total_timesteps)+'_obs_idx_20'+goal_loc_suffix+'_'+env.env_name+'_'+str(idx)+pre_suf+suffix+'_compare.png',dpi=200)
+    
     else:
         raise NotImplementedError
 

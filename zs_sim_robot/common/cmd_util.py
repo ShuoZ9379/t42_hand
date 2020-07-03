@@ -49,6 +49,15 @@ def make_vec_env(env_id, env_type, horizon, with_obs, with_obs_end, obs_idx, obs
         elif env_id=='corl_Acrobot-v1':
             from common.corl_acrobot_env import corl_acrobot
             env = corl_acrobot(env_seed=seed,goal_height=goal_height)
+        elif env_id=='real_ah':
+            from common.reah_ah_ev import real_ah_env_noobs, real_ah_env_withobs
+            if with_obs:
+                raise NotImplementedError
+                env = real_ah_env_withobs(obs_idx=obs_idx,env_seed=seed,ah_goal_loc_idx=ah_goal_loc_idx,ctrl_rwd=ctrl_rwd,ctrl_rwd_coef=ctrl_rwd_coef,with_reach_goal_terminal=ah_with_reach_goal,state_with_goal_loc=ah_with_goal_loc,with_obs_end=with_obs_end,sparse=sparse,obs_pen=obs_pen,final_rwd=final_rwd,horizon=horizon)
+            else:
+                env = real_ah_env_noobs(env_seed=seed,ah_goal_loc_idx=ah_goal_loc_idx,ctrl_rwd=ctrl_rwd,ctrl_rwd_coef=ctrl_rwd_coef,with_reach_goal_terminal=ah_with_reach_goal,state_with_goal_loc=ah_with_goal_loc,sparse=sparse,final_rwd=final_rwd,horizon=horizon)
+        else:
+            raise NotImplementedError
     env = Monitor(env,env_id,logger_dir and os.path.join(logger_dir, str(mpi_rank) + '.' + str(start_index)),allow_early_resets=True)
     if isinstance(env.action_space, gym.spaces.Box):
         env = ClipActionsWrapper(env)

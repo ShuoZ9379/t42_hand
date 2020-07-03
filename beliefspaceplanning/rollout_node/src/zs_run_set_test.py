@@ -14,7 +14,7 @@ def in_hull(p,H1,H2):
         return False
 
 
-rollout = 1
+rollout = 0
 
 comp = 'szhang'
 Sets = ['20c_100ac2']
@@ -27,9 +27,7 @@ set_modes = ['policy_OBS']
 
 ############################# Rollout ################################
 if rollout:
-    print('Please firstly check the obs file (14 or 20) is correct or not before rollout! ')
-    raise
-
+    raise ValueError('Please firstly check the obs file (14 or 20) is correct or not before rollout! ')
     import rospy
     from std_srvs.srv import Empty, EmptyResponse
     from rollout_node.srv import rolloutReq
@@ -92,6 +90,8 @@ if rollout:
 ############################# Evaluation ################################
 else:
     for Set in Sets:
+        #if Set=='20c_100ac2' or Set=='21c_100ac2_14dev_step100_weight10000':
+        #    raise ValueError('Please do not replot for Astar sets, since the planned actions are not corresponding to the existent rollouts!')
         if Set.find('19c') >= 0 or Set.find('20c') >= 0:
             C = np.array([[-66, 80],
              [-41, 100], 
@@ -299,7 +299,7 @@ else:
                         continue
                     print("\nRunning pickle file: " + pklfile)
                     
-                    ja = pklfile.find('_goal')+4
+                    ja = pklfile.find('_goal')+5
                     jb = ja + 1
 
                     while not (pklfile[jb] == '_'):
@@ -472,7 +472,8 @@ else:
                     if 1:# num == 0:
                         #if set_mode=='astar':
                         Pastar.append(p)
-                        Acastar.append(e)
+                        if e!=-1:
+                            Acastar.append(e)
                         #if set_mode == 'naive_goal':
                         #    Pn.append(p)
                         #    Acn.append(e)
@@ -524,13 +525,16 @@ else:
                             csv.write(str(Sum[key][loc, j]) + ',')
                 csv.write('\n')
 
-                print(set_modes[0]+": ")
-                print("Mean success rate: ", np.mean(np.array(Pastar)))
+            print(set_modes[0]+": ")
+            print("Mean success rate: ", np.mean(np.array(Pastar)))
+            if len(Acastar)!=0:
                 print("Mean error: ", np.mean(np.array(Acastar)))
-                #print "Naive: "
-                #print "Mean success rate: ", np.mean(np.array(Pn))
-                #print "Mean error: ", np.mean(np.array(Acn))
-                #print "Critic: "
-                #print "Mean success rate: ", np.mean(np.array(Pc))
-                #print "Mean error: ", np.mean(np.array(Acc))
+            else:
+                print("Mean error: No Success Rollout")
+            #print "Naive: "
+            #print "Mean success rate: ", np.mean(np.array(Pn))
+            #print "Mean error: ", np.mean(np.array(Acn))
+            #print "Critic: "
+            #print "Mean success rate: ", np.mean(np.array(Pc))
+            #print "Mean error: ", np.mean(np.array(Acc))
 

@@ -115,7 +115,7 @@ def get_env_type(args):
     env_id = args.env
     if args.env_type is not None:
         return args.env_type, env_id
-    elif env_id=='ah' or env_id=='corl_Reacher-v2' or env_id=='corl_Acrobot-v1':
+    elif env_id=='ah' or env_id=='corl_Reacher-v2' or env_id=='corl_Acrobot-v1' or env_id=='real_ah':
         env_type='corl'
     else:
         # Re-parse the gym registry, since we could have new envs since last time.
