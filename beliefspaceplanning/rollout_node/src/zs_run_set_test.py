@@ -14,12 +14,12 @@ def in_hull(p,H1,H2):
         return False
 
 
-rollout = 0
+rollout = 1
 
 comp = 'szhang'
 Sets = ['20c_100ac2']
 Sets = ['21c_100ac2_14dev_step100_weight10000']
-Sets = ['20c_policy']
+Sets = ['20c_policy_withgoalloc_OBS']
 set_modes = ['astar']
 set_modes = ['policy']
 set_modes = ['policy_OBS']
@@ -27,6 +27,8 @@ set_modes = ['policy_OBS']
 
 ############################# Rollout ################################
 if rollout:
+    print('Please firstly check the obs file (14 or 20) is correct or not before rollout! ')
+    raise
 
     import rospy
     from std_srvs.srv import Empty, EmptyResponse
@@ -35,6 +37,7 @@ if rollout:
     rollout_srv = rospy.ServiceProxy('/rollout/rollout', rolloutReq)
     rospy.init_node('run_rollout_set', anonymous=True)
     state_dim = 4
+
 
     for Set in Sets:
         for set_mode in set_modes:
@@ -53,7 +56,7 @@ if rollout:
                 pklfile = action_file[:-3] + 'pkl'
 
                 # To distribute rollout files between computers
-                ja = pklfile.find('goal')+4
+                ja = pklfile.find('_goal')+5
                 jb = ja + 1
                 while not (pklfile[jb] == '_'):
                     jb += 1
@@ -296,7 +299,7 @@ else:
                         continue
                     print("\nRunning pickle file: " + pklfile)
                     
-                    ja = pklfile.find('goal')+4
+                    ja = pklfile.find('_goal')+4
                     jb = ja + 1
 
                     while not (pklfile[jb] == '_'):
