@@ -73,8 +73,8 @@ class real_ah_env_noobs(object):
 			x_norm_arr, y_norm_arr = pickle.load(pickle_file)
 			self.x_mean_arr, self.x_std_arr = x_norm_arr[0], x_norm_arr[1]
 			self.y_mean_arr, self.y_std_arr = y_norm_arr[0], y_norm_arr[1]
-			self.init_mu=x_mean_arr[-4:]
-    		self.init_sigma=x_std_arr[-4:]
+			self.init_mu=self.x_mean_arr[-4:]
+			self.init_sigma=self.x_std_arr[-4:]
 
 	def reset(self,big_goal_radius=4.):
 		#torch.manual_seed(self.seed)
@@ -220,8 +220,8 @@ class real_ah_env_withobs(object):
 			x_norm_arr, y_norm_arr = pickle.load(pickle_file)
 			self.x_mean_arr, self.x_std_arr = x_norm_arr[0], x_norm_arr[1]
 			self.y_mean_arr, self.y_std_arr = y_norm_arr[0], y_norm_arr[1]
-			self.init_mu=x_mean_arr[-4:]
-    		self.init_sigma=x_std_arr[-4:]
+			self.init_mu=self.x_mean_arr[-4:]
+			self.init_sigma=self.x_std_arr[-4:]
 
 	def reset(self,big_goal_radius=4.):
 		#torch.manual_seed(self.seed)
