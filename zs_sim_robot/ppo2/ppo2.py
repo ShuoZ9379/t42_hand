@@ -34,7 +34,7 @@ def constfn(val):
 def safemean(xs):
     return np.nan if len(xs) == 0 else np.mean(xs)
 
-def learn(*, network, env, env_type, total_timesteps, eval_env = None, need_eval=False, num_eval_eps=1, compare=False,compare_ah_idx=8,reacher_sd=1,acrobot_sd=1,compare_real_ah_idx=2,
+def learn(*, network, env, env_type, total_timesteps, eval_env = None, need_eval=False, num_eval_eps=1, compare=False,compare_ah_idx=8,reacher_sd=1,acrobot_sd=1,
             seed=None, nsteps=2048, ent_coef=0.0, lr=3e-4,lr_factor=3,
             vf_coef=0.5,  max_grad_norm=0.5, gamma=0.99, lam=0.95,
             log_interval=1, nminibatches=4, noptepochs=4, cliprange=0.2,
@@ -300,7 +300,7 @@ def learn(*, network, env, env_type, total_timesteps, eval_env = None, need_eval
             lrnow = lr(1.0)
             cliprangenow = cliprange(1.0)
             logger.info('Evaluation: Stepping environment...')
-            obs, returns, masks, actions, values, neglogpacs, states, epinfos, final_obs = runner.run(do_eval=True,num_eval_eps=num_eval_eps,compare=compare,compare_ah_idx=compare_ah_idx,reacher_sd=reacher_sd,acrobot_sd=acrobot_sd,compare_real_ah_idx=compare_real_ah_idx) #pylint: disable=E0632
+            obs, returns, masks, actions, values, neglogpacs, states, epinfos, final_obs = runner.run(do_eval=True,num_eval_eps=num_eval_eps,compare=compare,compare_ah_idx=compare_ah_idx,reacher_sd=reacher_sd,acrobot_sd=acrobot_sd) #pylint: disable=E0632
             logger.info('Evaluation: Done.')
             do_eval_epinfobuf=deque(maxlen=100)
             do_eval_epinfobuf.extend(epinfos)
@@ -335,14 +335,12 @@ def learn(*, network, env, env_type, total_timesteps, eval_env = None, need_eval
             if not compare:
                 plot_eval_eps(seed,observ,env,eval_eps,compare)
             else:
-                if env.env_name=='ah':
+                if env.env_name=='ah' or env.env_name=='real_ah':
                     plot_eval_eps(seed,observ,env,compare_ah_idx,compare,pre_suf=single_loss_suf)
                 elif env.env_name=='corl_Reacher-v2':
                     plot_eval_eps(seed,observ,env,reacher_sd,compare)
                 elif env.env_name=='corl_Acrobot-v1':
                     plot_eval_eps(seed,observ,env,acrobot_sd,compare)
-                elif env.env_name=='real_ah':
-                    plot_eval_eps(seed,observ,env,compare_real_ah_idx,compare,pre_suf=single_loss_suf)
     return model
 
 def plot_eval_eps(seed,observ,env,idx,compare,pre_suf=''):

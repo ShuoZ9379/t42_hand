@@ -20,7 +20,7 @@ class Runner(AbstractEnvRunner):
         # Possibly arguments for reset() (Deprecated!!!)
         self.kwargs=kwargs
 
-    def run(self,do_eval=False,num_eval_eps=1,compare=False,compare_ah_idx=8,reacher_sd=1,acrobot_sd=1,compare_real_ah_idx=2,eval_steps=2048):
+    def run(self,do_eval=False,num_eval_eps=1,compare=False,compare_ah_idx=8,reacher_sd=1,acrobot_sd=1,eval_steps=2048):
         #compare_ah_idx : [0,2,7,8,15];  reacher_sd : [1,2,5]
         # Here, we init the lists that will contain the mb of experiences
         mb_obs, mb_rewards, mb_actions, mb_values, mb_dones, mb_neglogpacs = [],[],[],[],[],[]
@@ -91,7 +91,7 @@ class Runner(AbstractEnvRunner):
                 elif self.env.env_name=='real_ah':
                     self.obs[0,:4]=self.env.init_mu
                     if not (self.env.with_obs and self.env.obs_idx==14):
-                        self.env.goal_loc=self.env.goals[compare_real_ah_idx]
+                        self.env.goal_loc=self.env.goals[compare_ah_idx]
                         if self.env.state_with_goal_loc:
                             self.obs[0,4:6]=self.env.goal_loc
                     self.env.cur_state=self.obs[0,:]
