@@ -56,6 +56,7 @@ class Runner(AbstractEnvRunner):
                             self.obs[:] = self.env.reset(**self.kwargs)
                 mb_rewards.append(rewards)
         else:
+            mb_four_obs=np.ones((0,self.env.observation_space.shape[0]))
             self.nsteps=eval_steps
             self.obs = np.zeros((self.nenv,) + self.env.observation_space.shape, dtype=self.env.observation_space.dtype.name)
             self.obs[:] = self.env.reset(**self.kwargs)
@@ -109,7 +110,11 @@ class Runner(AbstractEnvRunner):
                 mb_neglogpacs.append(neglogpacs)
                 mb_dones.append(self.dones)
 
-                self.obs[:], rewards, self.dones, infos = self.env.step(actions)
+                if self.env.env_name=='real_ah':
+                    self.obs[:], rewards, self.dones, infos, four_obs = self.env.step(actions,evaluation=True)
+                    mb_four_obs=np.concatenate((mb_four_obs,four_obs))
+                else:
+                    self.obs[:], rewards, self.dones, infos = self.env.step(actions)
                 if type(rewards)!=np.ndarray and type(self.dones)!=np.ndarray and type(infos)!=list:
                     no_dummy=True
                     rewards,self.dones,infos=np.array([rewards]),np.array([self.dones]),[infos]
@@ -176,8 +181,12 @@ class Runner(AbstractEnvRunner):
             delta = mb_rewards[t] + self.gamma * nextvalues * nextnonterminal - mb_values[t]
             mb_advs[t] = lastgaelam = delta + self.gamma * self.lam * nextnonterminal * lastgaelam
         mb_returns = mb_advs + mb_values
-        return (*map(sf01, (mb_obs, mb_returns, mb_dones, mb_actions, mb_values, mb_neglogpacs)),
-            mb_states, epinfos, mb_final_obs)
+        if self.env.env_name=='real_ah' and do_eval:
+            return (*map(sf01, (mb_obs, mb_returns, mb_dones, mb_actions, mb_values, mb_neglogpacs)),
+                mb_states, epinfos, mb_final_obs,mb_four_obs)
+        else:
+            return (*map(sf01, (mb_obs, mb_returns, mb_dones, mb_actions, mb_values, mb_neglogpacs)),
+                mb_states, epinfos, mb_final_obs)
 
 def sf01(arr):
     """

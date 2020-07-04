@@ -65,8 +65,8 @@ class real_ah_env_noobs(object):
 		if not self.state_with_goal_loc:
 			self.goal_loc=self.goals[self.goal_loc_idx]
 
-		self.ah_model_path='./trans_model_data/reah_ah_wm_v0.1/model_lr0.0002_val0.1_seed0_nn_2_dp_0.1_nodes_200_epochs_10'
-		self.norm_path='./trans_model_data/reah_ah_wm_v0.1/normalization/normalization_arr'
+		self.ah_model_path='./trans_model_data/real_ah_wm_v0.1/model_lr0.0002_val0.1_seed0_nn_2_dp_0.1_nodes_200_epochs_10'
+		self.norm_path='./trans_model_data/real_ah_wm_v0.1/normalization/normalization_arr'
 		with open(self.ah_model_path, 'rb') as pickle_file:
 			self.ah_model = torch.load(pickle_file, map_location='cpu')
 		with open(self.norm_path, 'rb') as pickle_file:
@@ -104,20 +104,24 @@ class real_ah_env_noobs(object):
 		self.goal_loc=goal_loc
 		self.init_state=cur_state[:4]
 
-	def step(self,ac):
+	def step(self,ac,evaluation=False):
 		info={}
 		self.num_steps+=1
 		ac = np.nan_to_num(ac)
 		ac = np.clip(ac, self.action_space.low, self.action_space.high)
 
-		sa=np.concatenate([self.cur_state[:4],ac.reshape(-1,),self.init_state])
-		inpt = normalize(sa,self.x_std_arr,self.x_mean_arr)
-		inpt = torch.tensor(inpt, dtype=torch.float)
-		state_delta = self.ah_model(inpt)    
-		state_delta = state_delta.detach().numpy()
-		state_delta = denormalize(state_delta,self.y_std_arr,self.y_mean_arr)
-		next_state = sa[:4] + state_delta
-		self.cur_state = np.concatenate((next_state,self.cur_state[4:]))
+		four_obs=[]
+		for i in range(4):
+			sa=np.concatenate([self.cur_state[:4],ac.reshape(-1,),self.init_state])
+			inpt = normalize(sa,self.x_std_arr,self.x_mean_arr)
+			inpt = torch.tensor(inpt, dtype=torch.float)
+			state_delta = self.ah_model(inpt)    
+			state_delta = state_delta.detach().numpy()
+			state_delta = denormalize(state_delta,self.y_std_arr,self.y_mean_arr)
+			next_state = sa[:4] + state_delta
+			self.cur_state = np.concatenate((next_state,self.cur_state[4:]))
+			four_obs.append(self.cur_state)
+		four_obs=np.array(four_obs)
 
 		if not self.sparse:
 			if not self.ctrl_rew:
@@ -159,9 +163,10 @@ class real_ah_env_noobs(object):
 			else:
 				reward=-1
 				done=False
-
-		return self.cur_state,reward,done,info
-
+		if not evaluation:
+			return self.cur_state,reward,done,info
+		else:
+			return self.cur_state,reward,done,info,four_obs
 
 	def get_info(self):
 		return self.num_steps, self.cur_state
@@ -212,8 +217,8 @@ class real_ah_env_withobs(object):
 		if not self.state_with_goal_loc:
 			self.goal_loc=self.goals[self.goal_loc_idx]
 
-		self.ah_model_path='./trans_model_data/reah_ah_wm_v0.1/model_lr0.0002_val0.1_seed0_nn_2_dp_0.1_nodes_200_epochs_10'
-		self.norm_path='./trans_model_data/reah_ah_wm_v0.1/normalization/normalization_arr'
+		self.ah_model_path='./trans_model_data/real_ah_wm_v0.1/model_lr0.0002_val0.1_seed0_nn_2_dp_0.1_nodes_200_epochs_10'
+		self.norm_path='./trans_model_data/real_ah_wm_v0.1/normalization/normalization_arr'
 		with open(self.ah_model_path, 'rb') as pickle_file:
 			self.ah_model = torch.load(pickle_file, map_location='cpu')
 		with open(self.norm_path, 'rb') as pickle_file:
@@ -256,20 +261,24 @@ class real_ah_env_withobs(object):
 		self.goal_loc=goal_loc
 		self.init_state=cur_state[:4]
 
-	def step(self,ac):
+	def step(self,ac,evaluation=False):
 		info={}
 		self.num_steps+=1
 		ac = np.nan_to_num(ac)
 		ac = np.clip(ac, self.action_space.low, self.action_space.high)
 
-		sa=np.concatenate([self.cur_state[:4],ac.reshape(-1,),self.init_state])
-		inpt = normalize(sa,self.x_std_arr,self.x_mean_arr)
-		inpt = torch.tensor(inpt, dtype=torch.float)
-		state_delta = self.ah_model(inpt)    
-		state_delta = state_delta.detach().numpy()
-		state_delta = denormalize(state_delta,self.y_std_arr,self.y_mean_arr)
-		next_state = sa[:4] + state_delta
-		self.cur_state = np.concatenate((next_state,self.cur_state[4:]))
+		four_obs=[]
+		for i in range(4):
+			sa=np.concatenate([self.cur_state[:4],ac.reshape(-1,),self.init_state])
+			inpt = normalize(sa,self.x_std_arr,self.x_mean_arr)
+			inpt = torch.tensor(inpt, dtype=torch.float)
+			state_delta = self.ah_model(inpt)    
+			state_delta = state_delta.detach().numpy()
+			state_delta = denormalize(state_delta,self.y_std_arr,self.y_mean_arr)
+			next_state = sa[:4] + state_delta
+			self.cur_state = np.concatenate((next_state,self.cur_state[4:]))
+			four_obs.append(self.cur_state)
+		four_obs=np.array(four_obs)
 
 		if not self.sparse:
 			if not self.ctrl_rew:
@@ -283,7 +292,7 @@ class real_ah_env_withobs(object):
 			#	reward+=-1e6
 			#	done=True
 			#el
-			if not (np.linalg.norm(self.Obs-self.cur_state[:2],axis=1)>self.obs_dist*1.2).all():
+			if not ((np.linalg.norm(self.Obs-self.cur_state[:2],axis=1)>self.obs_dist*1.2).all() and (np.linalg.norm(self.Obs-four_obs[0,:2],axis=1)>self.obs_dist*1.2).all() and (np.linalg.norm(self.Obs-four_obs[1,:2],axis=1)>self.obs_dist*1.2).all() and (np.linalg.norm(self.Obs-four_obs[2,:2],axis=1)>self.obs_dist*1.2).all()):
 			#	print('obstacle collision')
 				reward+=-self.obs_pen
 				if self.with_obs_end:
@@ -310,7 +319,7 @@ class real_ah_env_withobs(object):
 				done=False
 
 		else:
-			if not (np.linalg.norm(self.Obs-self.cur_state[:2],axis=1)>self.obs_dist*1.2).all():
+			if not ((np.linalg.norm(self.Obs-self.cur_state[:2],axis=1)>self.obs_dist*1.2).all() and (np.linalg.norm(self.Obs-four_obs[0,:2],axis=1)>self.obs_dist*1.2).all() and (np.linalg.norm(self.Obs-four_obs[1,:2],axis=1)>self.obs_dist*1.2).all() and (np.linalg.norm(self.Obs-four_obs[2,:2],axis=1)>self.obs_dist*1.2).all()):
 			#	print('obstacle collision')
 				reward=-1-self.horizon
 				if self.with_obs_end:
@@ -333,7 +342,10 @@ class real_ah_env_withobs(object):
 				reward=-1
 				done=False
 
-		return self.cur_state,reward,done,info
+		if not evaluation:
+			return self.cur_state,reward,done,info
+		else:
+			return self.cur_state,reward,done,info,four_obs
 
 
 	def get_info(self):
