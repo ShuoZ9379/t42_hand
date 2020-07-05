@@ -432,7 +432,7 @@ def plot_eval_eps(seed,observ,env,idx,compare,pre_suf=''):
         else:
             goal_loc=env.goal_loc
             big_goal_radius=env.goal_radius/0.6875
-        fig, ax = plt.subplots(figsize=(10,3))
+        fig, ax = plt.subplots(figsize=(10,3.5))
         goal_plan = plt.Circle((goal_loc[0], goal_loc[1]), big_goal_radius*0.6875, color='m')
         #goal_plan = plt.Circle((goal_loc[0], goal_loc[1]), big_goal_radius, color='m')
         ax.add_artist(goal_plan)
@@ -442,7 +442,7 @@ def plot_eval_eps(seed,observ,env,idx,compare,pre_suf=''):
                 ax.add_artist(obs)
         plt.plot(round(env.init_mu[0]), round(env.init_mu[1]), 'o', markersize=16, color ='r')
         plt.plot(observ[:,0],observ[:,1],'-k')
-        plt.xlim([-40, 80])
+        plt.xlim([-50, 90])
         #plt.xlim([-60, 120])
         plt.ylim([70, 120])
         #plt.ylim([50, 120])

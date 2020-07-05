@@ -22,6 +22,7 @@ class Monitor(Wrapper):
             )
         else:
             self.results_writer = None
+        self.env_id=env_id
         self.reset_keywords = reset_keywords
         self.info_keywords = info_keywords
         self.allow_early_resets = allow_early_resets
@@ -49,15 +50,21 @@ class Monitor(Wrapper):
         self.needs_reset = False
 
 
-    def step(self, action):
+    def step(self,action,evaluation=False):
         if self.needs_reset:
             raise RuntimeError("Tried to step environment that needs reset")
         if type(action)==np.ndarray:
             if action.size==1:
                 action=action.reshape(1,)[0]
-        ob, rew, done, info = self.env.step(action)
+        if self.env_id=='real_ah' and evaluation:
+            ob, rew, done, info, four_obs = self.env.step(action,evaluation=evaluation)
+        else:
+            ob, rew, done, info = self.env.step(action)
         self.update(ob, rew, done, info)
-        return (ob, rew, done, info)
+        if self.env_id=='real_ah' and evaluation:
+            return (ob, rew, done, info, four_obs)
+        else:
+            return (ob, rew, done, info)
 
     def update(self, ob, rew, done, info):
         self.rewards.append(rew)

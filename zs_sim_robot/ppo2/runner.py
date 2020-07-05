@@ -111,7 +111,7 @@ class Runner(AbstractEnvRunner):
                 mb_dones.append(self.dones)
 
                 if self.env.env_name=='real_ah':
-                    self.obs[:], rewards, self.dones, infos, four_obs = self.env.step(actions,evaluation=True)
+                    self.obs[:], rewards, self.dones, infos, four_obs = self.env.step(actions,True)
                     mb_four_obs=np.concatenate((mb_four_obs,four_obs))
                 else:
                     self.obs[:], rewards, self.dones, infos = self.env.step(actions)

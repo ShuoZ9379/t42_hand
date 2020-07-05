@@ -199,7 +199,7 @@ else:
                 obs = plt.Circle(o[:2], o[2], color=[0.4,0.4,0.4])#, zorder=10)
                 ax.add_artist(obs)
         
-        plt.plot(0, 119, 'ok', markersize=16, color ='r',label='start')
+        plt.plot(0, 119, 'ok', markersize=16, color ='r',label='Start')
         #plt.text(-15, 123, 'start state', fontsize=16, color ='r')
         plt.ylim([60, 140])
         plt.xlabel('x')
@@ -485,7 +485,7 @@ else:
                     Sum[planner][loc, 16] = round(e_std, 2) # Success path RMSE relative to plan path std
 
                     plt.plot(Straj[:,0], Straj[:,1], '-k', linewidth = 2.7, label='Planned path')
-                    plt.plot(0, 119, 'ok', markersize=16, color ='r')
+                    plt.plot(Straj[0,0], Straj[0,1], 'ok', markersize=16, color ='r',label='Start')
                     plt.title(file_name + ", suc. rate: " + str(c) + "%, " + "goal reach rate: " + str(p) + "%, RMSE: " + str(round(e, 2)) + ' mm', fontsize = 17)
                     #plt.axis('equal')
 
