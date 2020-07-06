@@ -18,10 +18,10 @@ rollout = 0
 
 comp = 'szhang'
 Sets = ['20c_100ac2']
-#Sets = ['21c_100ac2_14dev_step100_weight10000']
-#Sets = ['20c_policy_withgoalloc_OBS']
+Sets = ['21c_100ac2_14dev_step100_weight10000']
+Sets = ['20c_policy_withgoalloc_OBS']
 set_modes = ['astar']
-#set_modes = ['policy_OBS']
+set_modes = ['policy_OBS']
 #set_modes = ['naive']
 
 ############################# Rollout ################################
