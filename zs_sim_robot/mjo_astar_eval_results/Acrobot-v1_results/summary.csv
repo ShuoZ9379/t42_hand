@@ -1,0 +1,4 @@
+Goal #,quickest_search,quickest_search,quickest_search,quickest_search,quickest_search,quickest_search,quickest_search,quickest_search,quickest_search,quickest_search,quickest_search,quickest_search,
+,goal reach rate, plan path length, rollout path length, rollout path length std, plan path steps, rollout path steps, rollout path steps std, plan path last distance to goal, rollout path last distance to goal, rollout path last distance to goal std, rollout path RMSE relative to plan path, rollout path RMSE relative to plan path std,
+1,60.0,104.90558,94.52256,28.1858,419.0,331.3,85.19,0.97301,0.99887,1.24127,0.77432,0.09362,
+Mean of all goals,60.0,104.90558,94.52256,28.1858,419.0,331.3,85.19,0.97301,0.99887,1.24127,0.77432,0.09362,

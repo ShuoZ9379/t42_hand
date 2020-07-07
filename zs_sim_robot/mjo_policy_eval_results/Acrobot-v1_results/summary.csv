@@ -1,0 +1,4 @@
+Goal #,,,,,,,,,,,,,
+,goal reach rate, plan path length, rollout path length, rollout path length std, plan path steps, rollout path steps, rollout path steps std, plan path last distance to goal, rollout path last distance to goal, rollout path last distance to goal std, rollout path RMSE relative to plan path, rollout path RMSE relative to plan path std,
+1,30.0,17.83339,23.12769,6.91925,104.0,94.9,14.26,0.0,1.10384,0.97521,0.60558,0.1077,
+Mean of all goals,30.0,17.83339,23.12769,6.91925,104.0,94.9,14.26,0.0,1.10384,0.97521,0.60558,0.1077,

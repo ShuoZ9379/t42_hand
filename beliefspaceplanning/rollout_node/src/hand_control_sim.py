@@ -4,7 +4,7 @@ import rospy
 import numpy as np 
 from std_msgs.msg import Float64MultiArray, Float32MultiArray, String, Bool
 from std_srvs.srv import Empty, EmptyResponse
-from rollout_node.srv import TargetAngles, IsDropped, observation, MoveServos
+from rollout_node.srv import TargetAngles, IsDropped, observation, MoveServos, reset
 import math
 import pickle
 
@@ -51,7 +51,7 @@ class hand_control():
         pub_gripper_status = rospy.Publisher('/hand_control/gripper_status', String, queue_size=10)
         pub_drop = rospy.Publisher('/hand_control/cylinder_drop', Bool, queue_size=10)
 
-        rospy.Service('/hand_control/ResetGripper', Empty, self.ResetGripper)
+        rospy.Service('/hand_control/ResetGripper', reset, self.ResetGripper)
         rospy.Service('/hand_control/MoveGripper', TargetAngles, self.MoveGripper)
         rospy.Service('/hand_control/IsObjDropped', IsDropped, self.CheckDropped)
         rospy.Service('/hand_control/observation', observation, self.GetObservation)
@@ -60,10 +60,10 @@ class hand_control():
         self.move_lift_srv = rospy.ServiceProxy('/LiftHand', Empty)
         self.reset_srv = rospy.ServiceProxy('/gazebo/reset_world', Empty)
 
-        if self.OBS:
+        #if self.OBS:
             #with open('/home/szhang/catkin_ws/src/beliefspaceplanning/rollout_node/set/obs_14.pkl', 'r') as f: 
-            with open('/home/szhang/catkin_ws/src/beliefspaceplanning/rollout_node/set/obs_20.pkl', 'r') as f: 
-                self.Obs = pickle.load(f)
+            #with open('/home/szhang/catkin_ws/src/beliefspaceplanning/rollout_node/set/obs_20.pkl', 'r') as f: 
+            #    self.Obs = pickle.load(f)
 
         rate = rospy.Rate(50)
         while not rospy.is_shutdown():
@@ -113,6 +113,9 @@ class hand_control():
 
     def ResetGripper(self, msg):
         ratein = rospy.Rate(15)
+        self.obs_idx=msg.obs_idx
+        with open('/home/szhang/catkin_ws/src/beliefspaceplanning/rollout_node/set/obs_'+str(self.obs_idx)+'.pkl', 'r') as f: 
+            self.Obs = pickle.load(f)
         print('[hand_control_sim] Resetting gripper...')
         while 1:
             # Open gripper

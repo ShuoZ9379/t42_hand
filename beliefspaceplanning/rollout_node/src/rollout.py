@@ -3,7 +3,7 @@
 import rospy
 from std_srvs.srv import Empty, EmptyResponse
 from std_msgs.msg import Bool, String, Float32MultiArray
-from rollout_node.srv import rolloutReq, rolloutReqFile, plotReq, observation, IsDropped, TargetAngles
+from rollout_node.srv import rolloutReq, rolloutReqFile, plotReq, observation, IsDropped, TargetAngles, reset
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
@@ -35,7 +35,7 @@ class rollout():
         self.obs_srv = rospy.ServiceProxy('/hand_control/observation', observation)
         self.drop_srv = rospy.ServiceProxy('/hand_control/IsObjDropped', IsDropped)
         self.move_srv = rospy.ServiceProxy('/hand_control/MoveGripper', TargetAngles)
-        self.reset_srv = rospy.ServiceProxy('/hand_control/ResetGripper', Empty)
+        self.reset_srv = rospy.ServiceProxy('/hand_control/ResetGripper', reset)
 
         self.trigger_srv = rospy.ServiceProxy('/rollout_recorder/trigger', Empty)
         self.gets_srv = rospy.ServiceProxy('/rollout_recorder/get_states', gets)
@@ -50,12 +50,12 @@ class rollout():
         # while not rospy.is_shutdown():
         rospy.spin()
 
-    def run_rollout(self, A, obs_size=np.array([0.75])):
+    def run_rollout(self, A, obs_idx, obs_size=np.array([0.75])):
         self.rollout_transition = []
 
         # Reset gripper
         while 1:
-            self.reset_srv()
+            self.reset_srv(obs_idx)
             while not self.gripper_closed:
                 self.rate.sleep()
 
@@ -148,9 +148,10 @@ class rollout():
     def CallbackRollout(self, req):
         
         actions_nom = np.array(req.actions).reshape(-1, self.action_dim)
+        obs_idx = req.obs_idx 
         obs_size = np.array(req.obs_size)
         success = True
-        success = self.run_rollout(actions_nom,obs_size)
+        success = self.run_rollout(actions_nom,obs_idx, obs_size)
 
         return {'states': self.states, 'actions_res': self.actions, 'success' : success}
 
