@@ -14,10 +14,11 @@ def in_hull(p,H1,H2):
         return False
 
 
-rollout = 1
+rollout = 0
 comp = 'szhang'
+#for obs_idxx in [20]:
 for obs_idxx in [20,14]:
-    #mode_ls=['astar']
+    #mode_ls=['policy']
     mode_ls=['astar','policy']
     for mode in mode_ls:
         if mode == 'astar':
@@ -556,10 +557,12 @@ for obs_idxx in [20,14]:
                     for key in Sum.keys():
                         csv.write('success rate, goal reach rate, plan path length, success path length, success path length std, failure path length, failure path length std, plan path steps, failure path steps, failure path steps std, plan path last distance to goal, success path last distance to goal, success path last distance to goal std, failure path last distance to goal, failure path last distance to goal std, success path RMSE relative to plan path, success path RMSE relative to plan path std,')
                     csv.write('\n')
+                    obs_size_ls=[]
                     for loc in range(len(obs_sizes)*len(idx)):
                         goal,obs_size=convert_to_goal_and_obs(loc,idx,obs_sizes)
                         csv.write(str(goal) + ',')
                         csv.write(obs_size + ',')
+                        obs_size_ls.append(float(obs_size))
                         for key in Sum.keys():
                             for j in range(Sum[key].shape[1]):
                                 if Sum[key][loc, j]==-1:
@@ -568,10 +571,14 @@ for obs_idxx in [20,14]:
                                     csv.write(str(Sum[key][loc, j]) + ',')
                         csv.write('\n')
                     csv.write('Mean of all goals,')
+                    csv.write(str(np.mean(obs_size_ls))+',')
                     for key in Sum.keys():   
                         for j in range(Sum[key].shape[1]):
                             xx=np.delete(Sum[key][:, j],np.where(Sum[key][:, j]==-1))
-                            csv.write(str(np.mean(xx)) + ',')
+                            if xx.shape[0]==0:
+                                csv.write('-,')
+                            else:
+                                csv.write(str(np.mean(xx)) + ',')
                     csv.write('\n')
 
                     print(set_modes[0]+": ")
