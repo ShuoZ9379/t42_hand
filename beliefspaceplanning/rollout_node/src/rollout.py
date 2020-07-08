@@ -148,10 +148,10 @@ class rollout():
     def CallbackRollout(self, req):
         
         actions_nom = np.array(req.actions).reshape(-1, self.action_dim)
-        obs_idx = req.obs_idx 
+        obs_idx = np.array(req.obs_idx)
         obs_size = np.array(req.obs_size)
         success = True
-        success = self.run_rollout(actions_nom,obs_idx, obs_size)
+        success = self.run_rollout(actions_nom,obs_idx,obs_size)
 
         return {'states': self.states, 'actions_res': self.actions, 'success' : success}
 

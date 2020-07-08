@@ -14,7 +14,7 @@ def in_hull(p,H1,H2):
         return False
 
 
-rollout = 0
+rollout = 1
 comp = 'szhang'
 for obs_idxx in [20,14]:
     #mode_ls=['astar']
@@ -35,7 +35,7 @@ for obs_idxx in [20,14]:
 
         ############################# Rollout ################################
         if rollout:
-            raise ValueError('Please firstly check the obs file (14 or 20) is correct or not before rollout! ')
+            #raise ValueError('Please firstly check the obs file (14 or 20) is correct or not before rollout! ')
             import rospy
             from std_srvs.srv import Empty, EmptyResponse
             from rollout_node.srv import rolloutReq
@@ -94,7 +94,7 @@ for obs_idxx in [20,14]:
                         Pro = []
                         for j in range(1):
                             print("Rollout number " + str(j) + ".")
-                            Sro = np.array(rollout_srv(Af, [0,0,0,0],obs_idxx,[obs_size]).states).reshape(-1,state_dim)                    
+                            Sro = np.array(rollout_srv(Af, [0,0,0,0],[obs_idxx],[obs_size]).states).reshape(-1,state_dim)                    
                             Pro.append(Sro)
                             with open(pklfile, 'wb') as f: 
                                 pickle.dump(Pro, f)

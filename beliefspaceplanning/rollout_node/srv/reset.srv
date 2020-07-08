@@ -1,2 +1,2 @@
-int32 obs_idx
+int32[] obs_idx
 ---

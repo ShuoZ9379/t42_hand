@@ -1,6 +1,6 @@
 float64[] actions
 float64[] start_state
-int32 obs_idx
+int32[] obs_idx
 float64[] obs_size
 ---
 float64[] states

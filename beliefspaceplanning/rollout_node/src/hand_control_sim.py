@@ -4,7 +4,7 @@ import rospy
 import numpy as np 
 from std_msgs.msg import Float64MultiArray, Float32MultiArray, String, Bool
 from std_srvs.srv import Empty, EmptyResponse
-from rollout_node.srv import TargetAngles, IsDropped, observation, MoveServos, reset
+from rollout_node.srv import TargetAngles, IsDropped, observation, MoveServos, reset, resetResponse
 import math
 import pickle
 
@@ -113,7 +113,7 @@ class hand_control():
 
     def ResetGripper(self, msg):
         ratein = rospy.Rate(15)
-        self.obs_idx=msg.obs_idx
+        self.obs_idx=msg.obs_idx[0]
         with open('/home/szhang/catkin_ws/src/beliefspaceplanning/rollout_node/set/obs_'+str(self.obs_idx)+'.pkl', 'r') as f: 
             self.Obs = pickle.load(f)
         print('[hand_control_sim] Resetting gripper...')
@@ -142,7 +142,7 @@ class hand_control():
         
         self.gripper_status = 'closed'
 
-        return EmptyResponse()
+        return resetResponse()
 
     def wait2initialGrasp(self):
         # This function waits for grasp to be stable (static) in its initial pose
