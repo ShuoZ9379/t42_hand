@@ -14,7 +14,7 @@ def in_hull(p,H1,H2):
         return False
 
 
-rollout = 0
+rollout = 1
 comp = 'szhang'
 #for obs_idxx in [20]:
 for obs_idxx in [20,14]:
@@ -93,7 +93,7 @@ for obs_idxx in [20,14]:
 
                         Af = A.reshape((-1,))
                         Pro = []
-                        for j in range(1):
+                        for j in range(10):
                             print("Rollout number " + str(j) + ".")
                             Sro = np.array(rollout_srv(Af, [0,0,0,0],[obs_idxx],[obs_size]).states).reshape(-1,state_dim)                    
                             Pro.append(Sro)
