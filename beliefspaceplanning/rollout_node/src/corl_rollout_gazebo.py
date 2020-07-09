@@ -187,7 +187,7 @@ for obs_idxx in [20,14]:
                 ax.add_patch(pgon)
 
                 if Set.find('19c') >= 0 or Set.find('20c') >= 0:
-                    idx = [0, 7, 8, 15, 2]
+                    idx = [0, 2, 7, 8, 15]
                 elif Set.find('21c')>=0:
                     idx = [0]
                 #if 'naive' in set_modes:
