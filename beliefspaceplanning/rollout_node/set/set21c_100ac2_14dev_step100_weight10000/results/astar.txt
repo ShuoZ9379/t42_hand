@@ -1,1 +1,1 @@
-astar_goal0_run0_m100_obs0.5_plan: 100.0, 100.0
+astar_goal0_run0_m100_obs0.5_plan: 90.0, 90.0
