@@ -15,6 +15,8 @@ class rolloutPublisher():
 
     def __init__(self):
         rospy.init_node('rollout_t42', anonymous=True)
+        if rospy.has_param('~ubuntu_cali_path'):
+            self.ubuntu_cali_path=rospy.get_param('~ubuntu_cali_path')
 
         rospy.Service('/rollout/rollout', rolloutReq, self.CallbackRollout)
         rospy.Service('/rollout/rollout_from_file', rolloutReqFile, self.CallbackRolloutFile)
@@ -52,6 +54,9 @@ class rolloutPublisher():
             print('[rollout] Verifying grasp...')
             if self.drop_srv().dropped: # Check if really grasped
                 print('[rollout] Grasp failed. Restarting')
+                rospy.sleep(1.)
+                self.slow_open()
+                self.open_srv()
                 continue
 
             msg = Float32MultiArray()  
@@ -94,7 +99,6 @@ class rolloutPublisher():
                     success = True
                     self.rollout_actor_srv(False)
                     break
-
                 self.rate.sleep()
 
             rospy.sleep(1.)

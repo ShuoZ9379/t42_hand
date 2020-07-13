@@ -206,7 +206,7 @@ for obs_idxx in [20,14]:
                     ctr = C[i]
                     goal_plan = plt.Circle((ctr[0], ctr[1]), r, color='m')
                     ax.add_artist(goal_plan)
-                    plt.text(ctr[0]-2.5, ctr[1]-2, str(j), fontsize=20)
+                    plt.text(ctr[0]-2.5, ctr[1]-2, str(i), fontsize=20)
                     j += 1
                 for o in Obs:
                     if in_hull(np.array(o[:2]),H1D,H2D):
@@ -372,6 +372,7 @@ for obs_idxx in [20,14]:
                             else:
                                 goal_plan = plt.Circle((ctr[0], ctr[1]), r, color='m')
                                 ax.add_artist(goal_plan)
+                                plt.text(ctr[0]-2.5, ctr[1]-2, str(num), fontsize=20)
                             try:
                                 for o in Obs:
                                     if in_hull(np.array(o[:2]),H1D,H2D):
