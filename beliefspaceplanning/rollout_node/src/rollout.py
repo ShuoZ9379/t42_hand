@@ -37,8 +37,8 @@ class rollout():
         self.move_srv = rospy.ServiceProxy('/hand_control/MoveGripper', TargetAngles)
         self.reset_srv = rospy.ServiceProxy('/hand_control/ResetGripper', reset)
 
-        self.trigger_srv = rospy.ServiceProxy('/rollout_recorder/trigger', Empty)
-        self.gets_srv = rospy.ServiceProxy('/rollout_recorder/get_states', gets)
+        #self.trigger_srv = rospy.ServiceProxy('/rollout_recorder/trigger', Empty)
+        #self.gets_srv = rospy.ServiceProxy('/rollout_recorder/get_states', gets)
 
         self.state_dim = var.state_dim_
         self.action_dim = var.state_action_dim_-var.state_dim_
@@ -75,7 +75,7 @@ class rollout():
         state = np.array(self.obs_srv().state)
         S = []
         S.append(np.copy(state))
-        self.trigger_srv()
+        #self.trigger_srv()
         stepSize = var.stepSize_
         n = 0
         i = 0

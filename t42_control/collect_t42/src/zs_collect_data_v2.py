@@ -167,24 +167,20 @@ class collect_data():
 
                         if Done:
                             break
-                        #if not self.first and episode_cur >= episode_max:
-                        #    recorder_srv()
-                        #    print('[collect_data] Simulated drop.')
-                        #    break
-                        
+                            
                         rate.sleep()
                 
                     self.trigger = False
                     print('[collect_data] Finished running episode %d with total number of collected points: %d' % (self.num_episodes, self.texp.getSize()))
                     print('[collect_data] Waiting for next episode initialization...')
                     rospy.sleep(5.0)
-
                     self.slow_open()
                     self.recorderSave_srv()
-                    open_srv()
-                    print('[collect_data] Position object and press key...')
-                    raw_input()
-                    self.trigger = True
+
+                open_srv()
+                print('[collect_data] Position object and press key...')
+                raw_input()
+                self.trigger = True
 
 
     def callbackGripperStatus(self, msg):

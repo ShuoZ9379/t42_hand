@@ -1,0 +1,9 @@
+<launch>
+
+  <node pkg="rollout_t42" name="rollout_actor_t42" type="zs_rollout_actor.py" output="screen"/>
+  <!--<node pkg="rollout_t42" name="rollout_recorder" type="zs_rollout_recorder.py" output="screen"/>-->
+  <node pkg="rollout_t42" name="rollout_t42" type="zs_rollout.py" output="screen"/>
+
+
+
+</launch>
