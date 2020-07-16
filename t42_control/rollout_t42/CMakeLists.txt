@@ -64,6 +64,9 @@ add_service_files(
   observation.srv
   MoveServos.srv
   gets.srv
+  reset.srv
+  CheckOnlineStatus.srv
+  StepOnlineReq.srv
 )
 
 ## Generate actions in the 'action' folder

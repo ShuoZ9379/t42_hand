@@ -9,7 +9,7 @@ import numpy as np
 from std_msgs.msg import Float64MultiArray, Float32MultiArray, String, Bool, Float32
 from std_srvs.srv import Empty, EmptyResponse
 from openhand.srv import MoveServos, ReadTemperature
-from hand_control.srv import TargetAngles, IsDropped, observation, close, ObjOrientation
+from hand_control.srv import TargetAngles, IsDropped, observation, close, ObjOrientation, CheckOnlineStatus
 
 # from common_msgs_gl.srv import SendDoubleArray, SendBool
 import geometry_msgs.msg
@@ -51,7 +51,7 @@ class hand_control():
     move_servos_srv = 0.
 
     def __init__(self):
-        rospy.init_node('hand_control', anonymous=True)
+        rospy.init_node('t42_control', anonymous=True)
         
         if rospy.has_param('~finger_initial_offset'):
             self.finger_initial_offset = rospy.get_param('~finger_initial_offset')
@@ -77,6 +77,9 @@ class hand_control():
         pub_obj_pos = rospy.Publisher('/hand_control/obj_pos_incam', Float32MultiArray, queue_size=10)
         #pub_obj_orientation = rospy.Publisher('/object_orientation', Float32MultiArray, queue_size=10)
         
+        rospy.Service('/MoveGripperOnline', TargetAngles, self.MoveGripperOnline)
+        rospy.Service('/CheckStatusOnline', CheckOnlineStatus, self.CheckStatusOnline)
+
         rospy.Service('/SlowOpenGripper', Empty, self.SlowOpenGripper)
         rospy.Service('/OpenGripper', Empty, self.OpenGripper)
         rospy.Service('/CloseGripper', close, self.CloseGripper)
@@ -258,6 +261,44 @@ class hand_control():
 
         return True
 
+    def MoveGripperOnline(self, msg):
+        f = 100.0
+        inc = np.array(msg.angles)
+        inc_angles = np.multiply(self.finger_move_offset, inc)
+        if (self.gripper_cur_pos!=np.array([3.,3.])).all():
+            self.gripper_cur_pos+=inc_angles*1.0/f
+            self.move_servos_srv.call(self.gripper_cur_pos)
+        else:
+            desired = self.gripper_pos+inc_angles*1.0/f
+            self.move_servos_srv.call(desired)
+        return {'success': True}
+
+
+    def CheckStatusOnline(self,msg):
+        suc=True
+        try:
+            if self.gripper_pos[0] > 0.9 or self.gripper_pos[1] > 0.9 or self.gripper_pos[0] < 0.03 or self.gripper_pos[1] < 0.03:
+                rospy.logerr('[hand] Desired angles out of bounds.')
+                suc=False
+        except:
+            print('[hand] Error with gripper_pos.')
+            suc=False
+        if suc:
+            try:
+                if abs(self.gripper_load[0]) > self.max_load or abs(self.gripper_load[1]) > self.max_load:
+                    rospy.logerr('[hand] Gripper overload.')
+                    suc=False
+            except:
+                print('[hand] Error with gripper_load.')
+                suc=False
+
+        if self.drop_query or self.no_detect or self.no_paral:
+            detect_and_no_drop=False
+        else:
+            detect_and_no_drop=True
+        return {'success': suc, 'grasped': detect_and_no_drop}
+
+
     def CheckDropped(self):
         # Should spin (update topics) between moveGripper and this
         if self.drop_query:
@@ -276,10 +317,16 @@ class hand_control():
                 return True, verbose
         except:
             print('[hand] Error with gripper_pos.')
-            # Check load
+            return True, ''
+
+        # Check load
+        try:
             if abs(self.gripper_load[0]) > self.max_load or abs(self.gripper_load[1]) > self.max_load:
                 verbose = '[hand] Pre-overload.'
                 return True, verbose
+        except:
+            print('[hand] Error with gripper_load.')
+            return True, ''
 
         # If object marker not visible, loop to verify and declare dropped.
         if self.obj_height == -1000:
@@ -307,9 +354,7 @@ class hand_control():
 
 
     def GetObservation(self, msg):
-        obs = np.concatenate((self.base_rmat,self.base_tvec,self.obj_pos, self.cornerPos,self.marker0,self.marker1,self.marker2,self.marker3, self.gripper_load, np.array([float(self.no_detect)]),np.array([float(self.no_paral)]),np.array([float(self.drop_query)])))
-        
-        
+        obs = np.concatenate((self.base_rmat,self.base_tvec,self.obj_pos, self.cornerPos,self.marker0,self.marker1,self.marker2,self.marker3, self.gripper_load, np.array([float(self.no_detect)]),np.array([float(self.no_paral)]),np.array([float(self.drop_query)]))) 
         return {'state': obs}
 
 

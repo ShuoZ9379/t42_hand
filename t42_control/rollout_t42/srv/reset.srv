@@ -1,0 +1,4 @@
+int32 goal_idx
+int32 big_goal_radius
+---
+float64[] states

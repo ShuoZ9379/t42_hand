@@ -270,13 +270,16 @@ class hand_control():
                 return True, verbose
         except:
             print('[hand] Error with gripper_pos.')
+            return True, ''
 
-            # Check load
+        # Check load
+        try:
             if abs(self.gripper_load[0]) > self.max_load or abs(self.gripper_load[1]) > self.max_load:
                 verbose = '[hand] Pre-overload.'
                 return True, verbose
-        # except:
-        #     pass
+        except:
+            print('[hand] Error with gripper_load.')
+            return True, ''
 
         # If object marker not visible, loop to verify and declare dropped.
         if self.obj_height == -1000:

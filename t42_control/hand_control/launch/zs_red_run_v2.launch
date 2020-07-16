@@ -13,7 +13,7 @@
 
   <node name="gripper_state_publisher" pkg="gripper_state_publisher" type="gripper_state_publisher_node" output="screen"/>
 
-  <node pkg="hand_control" name="hand_control" type="zs_hand_v2.py" output="screen">
+  <node pkg="hand_control" name="t42_control" type="zs_hand_v2.py" output="screen">
         <rosparam command="load" file="$(find hand_control)/param/zs_red.yaml" />
   </node>
 

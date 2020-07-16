@@ -40,6 +40,8 @@ class hand_control():
 
     def __init__(self):
         rospy.init_node('hand_control_sim', anonymous=True)
+        self.normal_goals=([[-66, 80],[-41, 100], [-62, 96], [-49, 86], [-55, 92],[59, 78],[31, 102],[60, 100],[52, 95],[-78, 67],[31, 125],[-26, 125],[0, 107],[3, 130],[-48, 114],[69, 78]])
+        self.horseshoe_goals=np.array([[21, 123]])
         
         rospy.Subscriber('/gripper/pos', Float32MultiArray, self.callbackGripperPos)
         rospy.Subscriber('/gripper/load', Float32MultiArray, self.callbackGripperLoad)
@@ -61,10 +63,7 @@ class hand_control():
         self.move_servos_srv = rospy.ServiceProxy('/MoveServos', MoveServos)
         self.move_lift_srv = rospy.ServiceProxy('/LiftHand', Empty)
         self.reset_srv = rospy.ServiceProxy('/gazebo/reset_world', Empty)
-
-        self.normal_goals=([[-66, 80],[-41, 100], [-62, 96], [-49, 86], [-55, 92],[59, 78],[31, 102],[60, 100],[52, 95],[-78, 67],[31, 125],[-26, 125],[0, 107],[3, 130],[-48, 114],[69, 78]])
-        self.horseshoe_goals=np.array([[21, 123]])
-
+        
         rate = rospy.Rate(50)
         while not rospy.is_shutdown():
             pub_gripper_status.publish(self.gripper_status)

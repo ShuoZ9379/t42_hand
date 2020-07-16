@@ -2,12 +2,12 @@ float64[] actions
 ---
 float64[] states
 float64[] states_history
+float64[] four_states
+float64[] four_states_history
 bool success
 int32[] success_history
 bool grasped
 int32[] grasped_history
-bool avoid_obs
-int32[] avoid_obs_history
 bool goal_reach
 int32[] goal_reach_history
 float64 reward

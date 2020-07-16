@@ -23,10 +23,10 @@ class rollout():
 
     def __init__(self):
         rospy.init_node('rollout_node', anonymous=True)
+        self.normal_goals=([[-66, 80],[-41, 100], [-62, 96], [-49, 86], [-55, 92],[59, 78],[31, 102],[60, 100],[52, 95],[-78, 67],[31, 125],[-26, 125],[0, 107],[3, 130],[-48, 114],[69, 78]])
+        self.horseshoe_goals=np.array([[21, 123]])
 
         rospy.Service('/rollout/rollout', rolloutReq, self.CallbackRollout)
-        rospy.Service('/rollout/ResetOnline', reset, self.CallbackResetOnline)
-        rospy.Service('/rollout/StepOnline', StepOnlinetReq, self.CallbackStepOnline)
         rospy.Service('/rollout/rollout_from_file', rolloutReqFile, self.CallbackRolloutFile)
         rospy.Service('/rollout/plot', plotReq, self.Plot)
         rospy.Subscriber('/hand_control/cylinder_drop', Bool, self.callbackDrop)
@@ -37,16 +37,18 @@ class rollout():
         self.obs_srv = rospy.ServiceProxy('/hand_control/observation', observation)
         self.drop_srv = rospy.ServiceProxy('/hand_control/IsObjDropped', IsDropped)
         self.move_srv = rospy.ServiceProxy('/hand_control/MoveGripper', TargetAngles)
+        self.reset_srv = rospy.ServiceProxy('/hand_control/ResetGripper', reset)
+
+
+        rospy.Service('/rollout/ResetOnline', reset, self.CallbackResetOnline)
+        rospy.Service('/rollout/StepOnline', StepOnlinetReq, self.CallbackStepOnline)
         self.move_online_srv = rospy.ServiceProxy('/hand_control/MoveGripperOnline', TargetAngles)
         self.check_srv=rospy.ServiceProxy('/hand_control/CheckStatusOnline', CheckOnlineStatus)
-        self.reset_srv = rospy.ServiceProxy('/hand_control/ResetGripper', reset)
+
 
         self.state_dim = var.state_dim_
         self.action_dim = var.state_action_dim_-var.state_dim_
         self.stepSize = var.stepSize_ # !!!!!!!!!!!!!!!!!!!!!!!!!!
-
-        self.normal_goals=([[-66, 80],[-41, 100], [-62, 96], [-49, 86], [-55, 92],[59, 78],[31, 102],[60, 100],[52, 95],[-78, 67],[31, 125],[-26, 125],[0, 107],[3, 130],[-48, 114],[69, 78]])
-        self.horseshoe_goals=np.array([[21, 123]])
 
         print("[rollout] Ready to rollout...")
 
@@ -149,7 +151,7 @@ class rollout():
             self.big_goal_radius=8
 
         while 1:
-            st=self.reset_srv(obs_idx,obs_size,goal_idx,big_goal_radius).states
+            st=self.reset_srv(self.obs_idx,self.obs_size,self.goal_idx,self.big_goal_radius).states
             while not self.gripper_closed:
                 print('caocaocao')
                 self.rate.sleep()
@@ -160,6 +162,7 @@ class rollout():
 
     def CallbackStepOnline(self, req):
         S,rwd_history,Done_history=[]
+        suc_history,object_grasped_history,no_hit_obs_history,goal_reached_history=[],[],[],[]
         actions_nom = np.array(req.actions).reshape(-1, self.action_dim)
         actions_nom = np.clip(actions_nom,np.array([-1,-1]),np.array([1,1]))
         for i in range(actions_nom.shape[0]):
@@ -169,17 +172,25 @@ class rollout():
             S.append(next_state)
             res=self.check_srv()
             suc=res.success
+            suc_history.append(int(suc))
             object_grasped=res.grasped
+            object_grasped_history.append(int(object_grasped))
             no_hit_obs=res.avoid_obs
+            no_hit_obs_history.append(int(no_hit_obs))
             goal_reached=res.goal_reach
-            Done=goal_reached or not (suc and object_grasped and no_hit_obs)
+            goal_reached_history.append(int(goal_reached))
+            failed = not (suc and object_grasped and no_hit_obs)
+            Done=goal_reached or failed
             Done_history.append(int(Done))
             rwd=-np.linalg.norm(self.goal-next_state[:2])-np.square(actions_nom[i]).sum()
+            #if failed:
+            if not no_hit_obs:
+                rwd-=1e6
             rwd_history.append(rwd)
             if Done:
                 print('Episode Finished')
                 break
-        return {'states': next_state, 'states_history': np.array(S).reshape((-1,)), 'success': suc, 'grasped': object_grasped, 'avoid_obs': no_hit_obs, 'goal_reach': goal_reached, 'reward': rwd, 'reward_history': np.array(rwd_history), 'done': Done, 'done_history': np.array(Done_history)}
+        return {'states': next_state, 'states_history': np.array(S).reshape((-1,)), 'success': suc, 'success_history': np.array(suc_history), 'grasped': object_grasped, 'grasped_history': np.array(object_grasped_history), 'avoid_obs': no_hit_obs, 'avoid_obs_history': np.array(no_hit_obs_history), 'goal_reach': goal_reached, 'goal_reach_history': np.array(goal_reached_history), 'reward': rwd, 'reward_history': np.array(rwd_history), 'done': Done, 'done_history': np.array(Done_history)}
 
     def CallbackRollout(self, req):
         obs_idx = np.array(req.obs_idx)
