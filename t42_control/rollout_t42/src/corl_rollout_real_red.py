@@ -115,6 +115,7 @@ for mode in mode_ls:
         from rollout_t42.srv import rolloutReq
 
         rollout_srv = rospy.ServiceProxy('/rollout/rollout', rolloutReq)
+        rollout_v2_srv = rospy.ServiceProxy('/rollout/rollout_v2', rolloutReq)
         rospy.init_node('run_rollout_set', anonymous=True)
         state_dim = 35
 
@@ -163,7 +164,8 @@ for mode in mode_ls:
                 Pro = []
                 for j in range(10):
                     print("Rollout number " + str(j) + ".")
-                    Sro = np.array(rollout_srv(Af).states).reshape(-1,state_dim)                    
+                    #Sro = np.array(rollout_srv(Af).states).reshape(-1,state_dim)
+                    Sro = np.array(rollout_v2_srv(Af).states).reshape(-1,state_dim)                      
                     Pro.append(Sro)
                     with open(pklfile, 'wb') as f: 
                         pickle.dump(Pro, f)

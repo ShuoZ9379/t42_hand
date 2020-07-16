@@ -4,7 +4,7 @@ import rospy
 import numpy as np 
 from std_msgs.msg import Float64MultiArray, Float32MultiArray, String, Bool
 from std_srvs.srv import Empty, EmptyResponse
-from rollout_node.srv import TargetAngles, IsDropped, observation, MoveServos, reset, resetResponse
+from rollout_node.srv import TargetAngles, IsDropped, observation, MoveServos, CheckOnlineStatus, reset
 import math
 import pickle
 
@@ -53,6 +53,8 @@ class hand_control():
 
         rospy.Service('/hand_control/ResetGripper', reset, self.ResetGripper)
         rospy.Service('/hand_control/MoveGripper', TargetAngles, self.MoveGripper)
+        rospy.Service('/hand_control/MoveGripperOnline', TargetAngles, self.MoveGripperOnline)
+        rospy.Service('/hand_control/CheckStatusOnline', CheckOnlineStatus, self.CheckStatusOnline)
         rospy.Service('/hand_control/IsObjDropped', IsDropped, self.CheckDropped)
         rospy.Service('/hand_control/observation', observation, self.GetObservation)
 
@@ -60,10 +62,8 @@ class hand_control():
         self.move_lift_srv = rospy.ServiceProxy('/LiftHand', Empty)
         self.reset_srv = rospy.ServiceProxy('/gazebo/reset_world', Empty)
 
-        #if self.OBS:
-            #with open('/home/szhang/catkin_ws/src/beliefspaceplanning/rollout_node/set/obs_14.pkl', 'r') as f: 
-            #with open('/home/szhang/catkin_ws/src/beliefspaceplanning/rollout_node/set/obs_20.pkl', 'r') as f: 
-            #    self.Obs = pickle.load(f)
+        self.normal_goals=([[-66, 80],[-41, 100], [-62, 96], [-49, 86], [-55, 92],[59, 78],[31, 102],[60, 100],[52, 95],[-78, 67],[31, 125],[-26, 125],[0, 107],[3, 130],[-48, 114],[69, 78]])
+        self.horseshoe_goals=np.array([[21, 123]])
 
         rate = rospy.Rate(50)
         while not rospy.is_shutdown():
@@ -113,9 +113,21 @@ class hand_control():
 
     def ResetGripper(self, msg):
         ratein = rospy.Rate(15)
-        self.obs_idx=msg.obs_idx[0]
+        self.obs_idx=msg.obs_idx
+        self.obs_size=msg.obs_size
+        self.goal_idx=msg.goal_idx
+        self.big_goal_radius=msg.big_goal_radius
+        if self.obs_idx==14:
+            self.goal=self.horseshoe_goals[self.goal_idx]
+            self.obs_size=0.5
+            self.big_goal_radius=5
+        elif self.obs_idx==20:
+            self.goal=self.normal_goals[self.goal_idx]
+            self.obs_size=0.75
+            self.big_goal_radius=8
         with open('/home/szhang/catkin_ws/src/beliefspaceplanning/rollout_node/set/obs_'+str(self.obs_idx)+'.pkl', 'r') as f: 
             self.Obs = pickle.load(f)
+
         print('[hand_control_sim] Resetting gripper...')
         while 1:
             # Open gripper
@@ -141,8 +153,7 @@ class hand_control():
                     break
         
         self.gripper_status = 'closed'
-
-        return resetResponse()
+        return {'states': np.concatenate((self.obj_pos, self.gripper_load), axis=0)}
 
     def wait2initialGrasp(self):
         # This function waits for grasp to be stable (static) in its initial pose
@@ -153,12 +164,6 @@ class hand_control():
         suc = False
         while c < 150:
             c += 1
-            # print('Load' + str(self.gripper_load))
-            # if self.gripper_load[0]!=self.gripper_load[1]: # equal when stable in the initial position
-            #     rospy.sleep(0.5)
-            #     ratein.sleep()
-            #     continue
-
             pos1 = self.obj_pos
             rospy.sleep(0.2)
             ratein.sleep()
@@ -199,14 +204,6 @@ class hand_control():
 
         self.move_servos_srv.call(angles)
 
-        # Obs = np.array([[-38, 117.1, 4.],
-        #     [-33., 100., 4.],
-        #     [-52.5, 105.2, 4.],
-        #     [43., 111.5, 6.],
-        #     [59., 80., 3.],
-        #     [36.5, 94., 4.]
-        #     ])
-
         if self.OBS:
             if obs_size is None:
                 obs_size=self.Obs[0,2]
@@ -215,6 +212,40 @@ class hand_control():
                     print('[hand_control_sim] Collision.')
                     return False
         return True
+
+    def MoveGripperOnline(self, msg):
+        inc = np.array(msg.angles)[:2]
+        inc_angles = np.multiply(self.finger_move_step_size, inc)
+        desired = self.gripper_pos + inc_angles
+
+        self.move_servos_srv.call(desired)
+        return {'success': True}
+
+    def CheckStatusOnline(self,msg):
+        if self.gripper_pos[0] > 0.7 or self.gripper_pos[1] > 0.7 or self.gripper_pos[0] < 0.003 or self.gripper_pos[1] < 0.003:
+            rospy.logerr('[hand_control_sim] Gripper angles out of bounds.')
+            suc=False
+
+        elif abs(self.gripper_load[0]) > 120 or abs(self.gripper_load[1]) > 120:
+            rospy.logerr('[hand_control_sim] Gripper overload.')
+            suc=False
+        else:
+            suc=True
+
+        no_hit_obs=True
+        if self.OBS:
+            for obs in self.Obs:
+                if np.linalg.norm(self.obj_pos-obs[:2]) < self.obs_size:
+                    print('[hand_control_sim] Collision.')
+                    no_hit_obs=False
+                    break
+
+        goal_reached=False
+        if np.linalg.norm(self.obj_pos-self.goal) < self.big_goal_radius:
+            print('[hand_control_sim] Goal Reached.')
+            goal_reached=True
+        return {'success': suc, 'grasped': self.object_grasped, 'avoid_obs': no_hit_obs, 'goal_reach': goal_reached}
+
 
     def CheckDropped(self, msg):
 

@@ -18,6 +18,10 @@ rollout = 0
 comp = 'szhang'
 #for obs_idxx in [20]:
 for obs_idxx in [20,14]:
+    if obs_idxx==14:
+        big_goal_radius=5
+    elif obs_idxx==20:
+        big_goal_radius=8
     #mode_ls=['policy']
     mode_ls=['astar','policy']
     for mode in mode_ls:
@@ -95,7 +99,7 @@ for obs_idxx in [20,14]:
                         Pro = []
                         for j in range(10):
                             print("Rollout number " + str(j) + ".")
-                            Sro = np.array(rollout_srv(Af, [0,0,0,0],[obs_idxx],[obs_size]).states).reshape(-1,state_dim)                    
+                            Sro = np.array(rollout_srv(Af, [0,0,0,0],[obs_idxx],[obs_size],[num],[big_goal_radius]).states).reshape(-1,state_dim)                    
                             Pro.append(Sro)
                             with open(pklfile, 'wb') as f: 
                                 pickle.dump(Pro, f)

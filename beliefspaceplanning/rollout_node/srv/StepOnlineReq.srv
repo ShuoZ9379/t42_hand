@@ -1,0 +1,12 @@
+float64[] actions
+---
+float64[] states
+float64[] states_history
+bool success
+bool grasped
+bool avoid_obs
+bool goal_reach
+float64 reward
+float64[] reward_history
+bool done
+int32[] done_history

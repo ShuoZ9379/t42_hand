@@ -2,6 +2,8 @@ float64[] actions
 float64[] start_state
 int32[] obs_idx
 float64[] obs_size
+int32[] goal_idx
+int32[] big_goal_radius
 ---
 float64[] states
 float64[] actions_res

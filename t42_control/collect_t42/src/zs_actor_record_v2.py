@@ -44,6 +44,7 @@ class actorPubRec():
                     count_fail+=1
                     if count_fail>=12:
                         self.Done=True
+                        count_fail=0
                 else:
                     count_fail=0
                 
