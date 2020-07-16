@@ -164,7 +164,7 @@ class rollout():
         S,rwd_history,Done_history=[]
         suc_history,object_grasped_history,no_hit_obs_history,goal_reached_history=[],[],[],[]
         actions_nom = np.array(req.actions).reshape(-1, self.action_dim)
-        actions_nom = np.clip(actions_nom,np.array([-1,-1]),np.array([1,1]))
+        #actions_nom = np.clip(actions_nom,np.array([-1,-1]),np.array([1,1]))
         for i in range(actions_nom.shape[0]):
             self.move_online_srv(actions_nom[i])
             self.rate.sleep()
