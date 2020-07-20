@@ -1,1 +1,0 @@
-naive_goal0_run3_plan: 100.0, 0.0

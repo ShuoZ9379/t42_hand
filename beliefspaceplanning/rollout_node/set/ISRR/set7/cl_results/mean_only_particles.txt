@@ -1,1 +1,0 @@
-mean_only_particles_goal2_run0_traj_gpc: 0.0, 50.0

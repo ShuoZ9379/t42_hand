@@ -1,3 +1,0 @@
-/naive_with_svm_goal0_run0,15.9448,104.717,0,0,104
-/naive_with_svm_goal1_run0,16.6334,87.8397,0,0,6
-/naive_with_svm_goal2_run0,11.1202,101.381,0,0,24

@@ -1,6 +1,0 @@
-/mean_only_particles_goal0_run0, 0.0, 0.0, 0.0, 0.0, 61
-/mean_only_particles_goal1_run0, 0.0, 0.0, 0.0, 0.0, 15
-/mean_only_particles_goal2_run0, 0.0, 0.0, 0.0, 0.0, 16
-/mean_only_particles_goal3_run0, 0.0, 0.0, 0.0, 0.0, 21
-/mean_only_particles_goal4_run0, 0.0, 0.0, 0.0, 0.0, 105
-/mean_only_particles_goal5_run0, 0.0, 0.0, 0.0, 0.0, 93
