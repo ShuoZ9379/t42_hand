@@ -111,6 +111,8 @@ class hand_control():
         self.obj_vel = Obj_vel[:2]*1000 # m/s to mm/s
 
     def ResetGripper(self, msg):
+        self.gripper_status = 'open'
+
         ratein = rospy.Rate(15)
         self.obs_idx=msg.obs_idx
         self.obs_size=msg.obs_size

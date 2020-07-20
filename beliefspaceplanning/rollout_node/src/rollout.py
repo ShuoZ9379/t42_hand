@@ -41,7 +41,7 @@ class rollout():
 
 
         rospy.Service('/rollout/ResetOnline', reset, self.CallbackResetOnline)
-        rospy.Service('/rollout/StepOnline', StepOnlinetReq, self.CallbackStepOnline)
+        rospy.Service('/rollout/StepOnline', StepOnlineReq, self.CallbackStepOnline)
         self.move_online_srv = rospy.ServiceProxy('/hand_control/MoveGripperOnline', TargetAngles)
         self.check_srv=rospy.ServiceProxy('/hand_control/CheckStatusOnline', CheckOnlineStatus)
 
@@ -63,7 +63,7 @@ class rollout():
         while 1:
             self.reset_srv(obs_idx[0],obs_size[0],goal_idx[0],big_goal_radius[0])
             while not self.gripper_closed:
-                print('caocaocao')
+                #print('caocaocao')
                 self.rate.sleep()
 
             print self.obj_pos, np.abs(self.obj_pos[0]-0.03) < 0.015 , np.abs(self.obj_pos[1]-118.16) < 0.1
@@ -153,7 +153,7 @@ class rollout():
         while 1:
             st=self.reset_srv(self.obs_idx,self.obs_size,self.goal_idx,self.big_goal_radius).states
             while not self.gripper_closed:
-                print('caocaocao')
+                #print('caocaocao')
                 self.rate.sleep()
             print self.obj_pos, np.abs(self.obj_pos[0]-0.03) < 0.015 , np.abs(self.obj_pos[1]-118.16) < 0.1
             if np.abs(self.obj_pos[0]-0.03) < 0.015 and np.abs(self.obj_pos[1]-118.16) < 0.1:
@@ -193,6 +193,7 @@ class rollout():
         return {'states': next_state, 'states_history': np.array(S).reshape((-1,)), 'success': suc, 'success_history': np.array(suc_history), 'grasped': object_grasped, 'grasped_history': np.array(object_grasped_history), 'avoid_obs': no_hit_obs, 'avoid_obs_history': np.array(no_hit_obs_history), 'goal_reach': goal_reached, 'goal_reach_history': np.array(goal_reached_history), 'reward': rwd, 'reward_history': np.array(rwd_history), 'done': Done, 'done_history': np.array(Done_history)}
 
     def CallbackRollout(self, req):
+        actions_nom = np.array(req.actions).reshape(-1, self.action_dim)
         obs_idx = np.array(req.obs_idx)
         obs_size = np.array(req.obs_size)
         goal_idx = np.array(req.goal_idx)
