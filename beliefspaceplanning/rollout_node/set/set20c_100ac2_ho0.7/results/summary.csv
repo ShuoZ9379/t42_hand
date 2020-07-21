@@ -1,0 +1,4 @@
+Goal #,Obstacle Size,astar,astar,astar,astar,astar,astar,astar,astar,astar,astar,astar,astar,astar,astar,astar,astar,astar,
+,,success rate, goal reach rate, plan path length, success path length, success path length std, failure path length, failure path length std, plan path steps, failure path steps, failure path steps std, plan path last distance to goal, success path last distance to goal, success path last distance to goal std, failure path last distance to goal, failure path last distance to goal std, success path RMSE relative to plan path, success path RMSE relative to plan path std,
+15,0.75,100.0,100.0,81.74,83.01,0.69,-,-,445.0,-,-,5.4090292995895455,4.377119323169008,0.22889457336219848,-,-,1.08,0.05,
+Mean of all goals,0.75,100.0,100.0,81.74,83.01,0.69,-,-,445.0,-,-,5.4090292995895455,4.377119323169008,0.22889457336219848,-,-,1.08,0.05,
