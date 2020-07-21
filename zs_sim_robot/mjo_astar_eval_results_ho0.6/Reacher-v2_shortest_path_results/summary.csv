@@ -1,0 +1,6 @@
+Goal #,shortest_path,shortest_path,shortest_path,shortest_path,shortest_path,shortest_path,shortest_path,shortest_path,shortest_path,shortest_path,
+,goal reach rate, plan path length, rollout path length, rollout path length std, plan path steps, plan path last distance to goal, rollout path last distance to goal, rollout path last distance to goal std, rollout path RMSE relative to plan path, rollout path RMSE relative to plan path std,
+1,100.0,0.23242,0.22773,0.0012,20.0,0.00254,0.00931,0.00059,0.00409,0.00072,
+2,0.0,0.24507,0.24537,0.00112,34.0,0.00649,0.0416,0.0026,0.01893,0.00135,
+5,80.0,0.31776,0.31436,0.00518,23.0,0.00508,0.01544,0.00407,0.00818,0.00085,
+Mean of all goals,60.0,0.26508333333333334,0.26248666666666665,0.0025,25.666666666666668,0.004703333333333334,0.022116666666666663,0.00242,0.0104,0.0009733333333333334,

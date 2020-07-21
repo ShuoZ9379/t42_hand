@@ -14,8 +14,9 @@ cuda = torch.cuda.is_available()
 dtype = torch.float
 
 class TrajModelTrainer():
-    def __init__(self, env_name, episodes, val_size=0, model_save_path=None, error_save_path=None, norm_path = None, state_dim = 4, action_dim = 6, save=True):
+    def __init__(self, env_name, episodes, val_size=0, model_save_path=None, error_save_path=None, norm_path = None, state_dim = 4, action_dim = 6, ho_rate=0, save=True):
         self.env_name=env_name
+        self.ho_rate=ho_rate
         self.task_ofs = state_dim+action_dim
         self.state_dim = state_dim
         self.new_state_dim = state_dim
@@ -30,11 +31,17 @@ class TrajModelTrainer():
         if val_size:
             self.val_episodes=episodes[-val_size:]
             self.episodes=episodes[:-val_size]
+            episodes=np.concatenate(episodes)
+            np.random.shuffle(episodes)
+            episodes=episodes[:round((1-self.ho_rate)*episodes.shape[0]),:]
             self.norm, data, val_data= self.get_norms(episodes, val_size)
             self.x_val_data, self.y_val_data = val_data
         else:
             self.val_episodes=None
             self.episodes=episodes
+            episodes=np.concatenate(episodes)
+            np.random.shuffle(episodes)
+            episodes=episodes[:round((1-self.ho_rate)*episodes.shape[0]),:]
             self.norm, data= self.get_norms(episodes, val_size)
         self.x_data, self.y_data = data
 
@@ -89,17 +96,14 @@ class TrajModelTrainer():
                 with open(self.model_save_path+'_epochs_'+str(i+1), 'wb') as pickle_file:
                     torch.save(model, pickle_file)
         if self.save:
-            with open(self.model_save_path, 'wb') as pickle_file:
+            with open(self.model_save_path+'_epochs_'+str(epochs), 'wb') as pickle_file:
                 torch.save(model, pickle_file)
         with open(self.error_save_path, 'wb') as pickle_file:
             pickle.dump([train_loss_ls,val_loss_ls],pickle_file)
         return train_loss_ls,val_loss_ls
 
     def get_norms(self, episodes, val_size):
-        full_dataset = episodes
-
-        FULL_DATA = np.concatenate(full_dataset)
-        np.random.shuffle(FULL_DATA)
+        FULL_DATA = episodes
         if self.val_size:
             DATA = FULL_DATA[:-val_size,:]
             VAL_DATA=FULL_DATA[-val_size:,:]
@@ -125,9 +129,6 @@ class TrajModelTrainer():
             x_std_arr = np.concatenate((x_std_arr[:self.state_dim], np.array([1]), x_std_arr[-self.state_dim:]))
         else:
             raise Exception("Not implemented!")
-        # x_mean_arr[self.state_dim:-self.state_dim] *= 0
-        # x_std_arr[self.state_dim:-self.state_dim] *= 0
-        # x_std_arr[self.state_dim:-self.state_dim] += 1
 
         y_mean_arr = np.mean(full_y_data, axis=0)
         y_std_arr = np.std(full_y_data, axis=0)
@@ -138,8 +139,12 @@ class TrajModelTrainer():
             x_val_data = z_score_normalize(x_val_data, x_mean_arr, x_std_arr)
             y_val_data = z_score_normalize(y_val_data, y_mean_arr, y_std_arr)
         if self.norm_path:
-            with open(self.norm_path+'normalization_arr', 'wb') as pickle_file:
-                pickle.dump(((x_mean_arr, x_std_arr),(y_mean_arr, y_std_arr)), pickle_file)
+            if self.ho_rate==0:
+                with open(self.norm_path+'normalization_arr', 'wb') as pickle_file:
+                    pickle.dump(((x_mean_arr, x_std_arr),(y_mean_arr, y_std_arr)), pickle_file)
+            else:
+                with open(self.norm_path+'normalization_arr_ho'+str(self.ho_rate), 'wb') as pickle_file:
+                    pickle.dump(((x_mean_arr, x_std_arr),(y_mean_arr, y_std_arr)), pickle_file)
 
         x_data = torch.tensor(x_data, dtype=self.dtype)
         y_data = torch.tensor(y_data, dtype=self.dtype)

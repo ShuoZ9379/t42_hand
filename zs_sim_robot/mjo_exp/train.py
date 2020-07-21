@@ -11,14 +11,14 @@ import glob,pickle,os,copy,sys,random
 import sys
 from .hyperparameters import *
 from .predict import get_x_and_y,get_y
-#argv env_name lr nodes epochs model_name_suffix(_v1, ...) data_file_suffix seed
+#argv env_name lr nodes epochs ho_rate, data_file_suffix, model_name_suffix(_v1, ...) seed
 
 
-def main(env_name,lr,nodes,epochs=50,data_file_suffix='train',model_name_suffix='',seed=0):
+def main(env_name,lr,nodes,epochs=50,ho_rate=0,data_file_suffix='train',model_name_suffix='',seed=0):
 
     held_out = .1
     dropout_rate = .0
-    epoch_save_interval=1
+    epoch_save_interval=10000000
     retrain=False
     batch_size = 200
     wd = .001
@@ -31,6 +31,7 @@ def main(env_name,lr,nodes,epochs=50,data_file_suffix='train',model_name_suffix=
     lr=float(lr)
     nodes=int(nodes)
     epochs=int(epochs)
+    ho_rate=float(ho_rate)
     seed=int(seed)
 
     train_ds_path='./mjo_eps_data/'+env_name+'_'+data_file_suffix+'_episode_data.pkl'
@@ -72,8 +73,9 @@ def main(env_name,lr,nodes,epochs=50,data_file_suffix='train',model_name_suffix=
         for i in range(len(out)):
             out[i]=torch.tensor(np.concatenate((get_y(out[i][:,:4]),out[i][:,6:7],get_y(out[i][:,7:11])),axis=1), dtype=dtype)     
     eps_len=[ep.shape[0] for ep in processed_eps_ls]
-    val_size = int(sum(eps_len)*held_out)
-    print("Training Data Size: " + str(sum(eps_len)-val_size) + " Validation Data Size:" + str(val_size))
+    all_eps_len=round(sum(eps_len)*(1-ho_rate))
+    val_size = round(all_eps_len*held_out)
+    print("Training Data Size: " + str(all_eps_len-val_size) + " Validation Data Size:" + str(val_size))
 
     np.random.seed(seed)
     np.random.shuffle(out)
@@ -86,9 +88,15 @@ def main(env_name,lr,nodes,epochs=50,data_file_suffix='train',model_name_suffix=
         os.makedirs(norm_path)
     if not os.path.exists(error_path):
         os.makedirs(error_path)
-    model_save_path = save_path + env_name + '_model_lr' + str(lr)+ '_nodes' + str(nodes) + '_seed'+str(seed)
+    model_save_path = save_path + env_name + '_model/' + env_name + '_model_lr' + str(lr)+ '_nodes' + str(nodes) + '_seed'+str(seed)
+    if ho_rate!=0:
+        model_save_path+='_ho'+str(ho_rate)
     error_save_path = error_path + 'err_lr' + str(lr)+ '_nodes' + str(nodes) + '_seed'+str(seed)
-    trainer = TrajModelTrainer(env_name, out, val_size=val_size, model_save_path=model_save_path, error_save_path=error_save_path, norm_path=norm_path, state_dim=state_dim, action_dim=action_dim) 
+    if ho_rate!=0:
+        error_save_path+='_ho'+str(ho_rate)
+    trainer = TrajModelTrainer(env_name, out, val_size=val_size, model_save_path=model_save_path, error_save_path=error_save_path, norm_path=norm_path, state_dim=state_dim, action_dim=action_dim, ho_rate=ho_rate) 
+    ### ho_rate 0: 270k training data, with 300k norm; other ho_rates: ... training data, with ... norm.
+    ### if time enough, train ho_rate 0 with 270k norm and then substitute current model for ho_rate=0.
     norm=trainer.norm
 
     if retrain:
@@ -122,8 +130,10 @@ def main(env_name,lr,nodes,epochs=50,data_file_suffix='train',model_name_suffix=
     plt.ylabel("Loss")
     plt.legend()
     fig.set_size_inches(10,10)
-    fig.savefig(error_path+'All_Loss_lr' + str(lr)+ '_nodes' + str(nodes) + '_seed' + str(seed) +'.png')
-
+    if ho_rate==0:
+        fig.savefig(error_path+'All_Loss_lr' + str(lr)+ '_nodes' + str(nodes) + '_seed' + str(seed) +'.png')
+    else:
+        fig.savefig(error_path+'All_Loss_lr' + str(lr)+ '_nodes' + str(nodes) + '_seed' + str(seed) +'_ho'+str(ho_rate)+'.png')
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
