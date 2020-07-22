@@ -359,10 +359,12 @@ if set_idx.find('20c'):
          [69, 78],
          ])
     big_goal_radius=8
-ho_modes=['_ho0.5','_ho0.6','_ho0.7','_ho0.8','_ho0.9','_ho0.95','_ho0.99']
-#ho_modes=['_ho0.99']
+#ho_modes=['']
+#ho_modes=['_ho0.5','_ho0.6','_ho0.7','_ho0.8','_ho0.9','_ho0.95','_ho0.99']
+ho_modes=['_ho0.99']
 #for goal_idx in [0,2,7,8,15]:
-for goal_idx in [15]:
+#for goal_idx in [15]:
+for goal_idx in [0,2,7,8]:
     for mode in ['_100ac2']:
         for ho_mode in ho_modes:
             torch.manual_seed(1)
