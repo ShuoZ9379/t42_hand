@@ -14,7 +14,7 @@ def in_hull(p,H1,H2):
         return False
 
 
-rollout = 0
+rollout = 1
 comp = 'szhang'
 for obs_idxx in [20]:
 #for obs_idxx in [20,14]:
@@ -51,7 +51,8 @@ for obs_idxx in [20]:
             state_dim = 4
 
             #ho_ls=['']
-            ho_ls=['_ho0.5','_ho0.6','_ho0.7','_ho0.8','_ho0.9','_ho0.95','_ho0.99']
+            #ho_ls=['_ho0.5','_ho0.6','_ho0.7','_ho0.8','_ho0.9','_ho0.95','_ho0.99']
+            ho_ls=['_ho0.99','_ho0.995','_ho0.999']
             for ho_suf in ho_ls:
                 for Set in Sets:
                     for set_mode in set_modes:
@@ -67,8 +68,8 @@ for obs_idxx in [20]:
                                 continue
 
         ############################# Later Uncomment ################################################################################################
-                            if any(action_file[:-3] + 'pkl' in f for f in files_pkl):
-                                continue
+                            #if any(action_file[:-3] + 'pkl' in f for f in files_pkl):
+                            #    continue
         ############################# Later Uncomment ################################################################################################
                             
                             pklfile = action_file[:-3] + 'pkl'
@@ -116,7 +117,8 @@ for obs_idxx in [20]:
         ############################# Evaluation ################################
         else:
             #ho_ls=['']
-            ho_ls=['_ho0.5','_ho0.6','_ho0.7','_ho0.8','_ho0.9','_ho0.95','_ho0.99']
+            #ho_ls=['_ho0.5','_ho0.6','_ho0.7','_ho0.8','_ho0.9','_ho0.95','_ho0.99']
+            ho_ls=['_ho0.99','_ho0.995','_ho0.999']
             for ho_suf in ho_ls:
                 print('Hold:',ho_suf[3:])
                 for Set in Sets:

@@ -361,41 +361,44 @@ if set_idx.find('20c'):
     big_goal_radius=8
 #ho_modes=['']
 #ho_modes=['_ho0.5','_ho0.6','_ho0.7','_ho0.8','_ho0.9','_ho0.95','_ho0.99']
-ho_modes=['_ho0.99']
+#ho_modes=['_ho0.99']
+ho_modes=['_ho0.995','_ho0.999']
+ho_modes=['_ho0.999']
 #for goal_idx in [0,2,7,8,15]:
 #for goal_idx in [15]:
 for goal_idx in [0,2,7,8]:
     for mode in ['_100ac2']:
         for ho_mode in ho_modes:
-            torch.manual_seed(1)
-            print('Starting '+ho_mode[3:])
-            model_path='/Users/zsbjltwjj/'+loccc+'/zs_sim_robot/trans_model_data/gazebo_ah_model/sim_cont_trajT_bs512_model512_BS64_loadT'+ho_mode
-            norm_path='/Users/zsbjltwjj/'+loccc+'/zs_sim_robot/trans_model_data/gazebo_ah_normalization/normalization_arr_sim_cont_trajT_bs512_model512_BS64_loadT'+ho_mode+'_py2'
-            with open(model_path, 'rb') as pickle_file:
-                model = torch.load(pickle_file, map_location='cpu')
-            with open(norm_path, 'rb') as pickle_file:
-                x_norm_arr, y_norm_arr = pickle.load(pickle_file)
-                x_mean_arr, x_std_arr = x_norm_arr[0], x_norm_arr[1]
-                y_mean_arr, y_std_arr = y_norm_arr[0], y_norm_arr[1]
-            obs_set_path='/Users/zsbjltwjj/Downloads/t42_hand/beliefspaceplanning/rollout_node/set/set20c'+mode+ho_mode+'/'
-            if not os.path.exists(obs_set_path):
-                os.makedirs(obs_set_path)
+            for sdd in range(1,2):
+                torch.manual_seed(sdd)
+                print('Starting '+ho_mode[3:])
+                model_path='/Users/zsbjltwjj/'+loccc+'/zs_sim_robot/trans_model_data/gazebo_ah_model/sim_cont_trajT_bs512_model512_BS64_loadT'+ho_mode
+                norm_path='/Users/zsbjltwjj/'+loccc+'/zs_sim_robot/trans_model_data/gazebo_ah_normalization/normalization_arr_sim_cont_trajT_bs512_model512_BS64_loadT'+ho_mode+'_py2'
+                with open(model_path, 'rb') as pickle_file:
+                    model = torch.load(pickle_file, map_location='cpu')
+                with open(norm_path, 'rb') as pickle_file:
+                    x_norm_arr, y_norm_arr = pickle.load(pickle_file)
+                    x_mean_arr, x_std_arr = x_norm_arr[0], x_norm_arr[1]
+                    y_mean_arr, y_std_arr = y_norm_arr[0], y_norm_arr[1]
+                obs_set_path='/Users/zsbjltwjj/Downloads/t42_hand/beliefspaceplanning/rollout_node/set/set20c'+mode+ho_mode+'/'
+                if not os.path.exists(obs_set_path):
+                    os.makedirs(obs_set_path)
 
-            obs_dist=0.75
-            ac_weight=10000
-            run_idx=0
-        
-            print("Goal Index:",goal_idx)
-            num_steps=100
-            initial_state=gen_init_state(mu,sigma,run_idx)
-            goal_loc=Goal[goal_idx]
-            #goal_loc=np.array([25,110])
-            status, plan_path, plan_action_path,len_action_path, num_expanded_nodes, max_size_fringe, total_time\
-            =Astar_discrete_mstep_stomodel(mode,ac_weight,num_steps,initial_state,goal_loc,model,x_std_arr,x_mean_arr,y_std_arr,y_mean_arr,H1D,H2D,Obs,obs_dist)
-            print('len_of_action: ',len_action_path)
-            print('num_expanded_nodes: ', num_expanded_nodes,'\n')
-            np.savetxt(obs_set_path+set_mode+'_goal'+str(goal_idx)+'_run'+str(run_idx)+'_m'+str(num_steps)+'_obs'+str(obs_dist)+ho_mode+'_traj.txt',\
-                       plan_path, fmt='%.20f', delimiter=',')
-            np.savetxt(obs_set_path+set_mode+'_goal'+str(goal_idx)+'_run'+str(run_idx)+'_m'+str(num_steps)+'_obs'+str(obs_dist)+ho_mode+'_plan.txt',\
-                       plan_action_path, fmt='%.20f', delimiter=',')
-            mplot_planned_traj(ho_mode,num_steps,set_mode,obs_set_path,initial_state,run_idx,goal_idx,plan_path,goal_loc,H1,H2,Obs,obs_dist)
+                obs_dist=0.75
+                ac_weight=10000
+                run_idx=0
+            
+                print("Goal Index:",goal_idx)
+                num_steps=100
+                initial_state=gen_init_state(mu,sigma,run_idx)
+                goal_loc=Goal[goal_idx]
+                #goal_loc=np.array([25,110])
+                status, plan_path, plan_action_path,len_action_path, num_expanded_nodes, max_size_fringe, total_time\
+                =Astar_discrete_mstep_stomodel(mode,ac_weight,num_steps,initial_state,goal_loc,model,x_std_arr,x_mean_arr,y_std_arr,y_mean_arr,H1D,H2D,Obs,obs_dist)
+                print('len_of_action: ',len_action_path)
+                print('num_expanded_nodes: ', num_expanded_nodes,'\n')
+                np.savetxt(obs_set_path+set_mode+'_goal'+str(goal_idx)+'_run'+str(run_idx)+'_m'+str(num_steps)+'_obs'+str(obs_dist)+ho_mode+'_traj.txt',\
+                           plan_path, fmt='%.20f', delimiter=',')
+                np.savetxt(obs_set_path+set_mode+'_goal'+str(goal_idx)+'_run'+str(run_idx)+'_m'+str(num_steps)+'_obs'+str(obs_dist)+ho_mode+'_plan.txt',\
+                           plan_action_path, fmt='%.20f', delimiter=',')
+                mplot_planned_traj(ho_mode,num_steps,set_mode,obs_set_path,initial_state,run_idx,goal_idx,plan_path,goal_loc,H1,H2,Obs,obs_dist)

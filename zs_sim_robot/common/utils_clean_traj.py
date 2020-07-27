@@ -96,8 +96,12 @@ class TrajModelTrainer():
                 with open(self.model_save_path+'_epochs_'+str(i+1), 'wb') as pickle_file:
                     torch.save(model, pickle_file)
         if self.save:
-            with open(self.model_save_path+'_epochs_'+str(epochs), 'wb') as pickle_file:
-                torch.save(model, pickle_file)
+            if self.env_name!='gazebo_ah':
+                with open(self.model_save_path+'_epochs_'+str(epochs), 'wb') as pickle_file:
+                    torch.save(model, pickle_file)
+            else:
+                with open(self.model_save_path, 'wb') as pickle_file:
+                    torch.save(model, pickle_file)
         with open(self.error_save_path, 'wb') as pickle_file:
             pickle.dump([train_loss_ls,val_loss_ls],pickle_file)
         return train_loss_ls,val_loss_ls
@@ -121,7 +125,7 @@ class TrajModelTrainer():
         x_mean_arr = np.mean(full_x_data, axis=0)
         x_std_arr = np.std(full_x_data, axis=0)
 
-        if self.env_name=='Reacher-v2':
+        if self.env_name=='Reacher-v2' or self.env_name=='gazebo_ah':
             x_mean_arr = np.concatenate((x_mean_arr[:self.state_dim], np.array([0,0]), x_mean_arr[-self.state_dim:]))
             x_std_arr = np.concatenate((x_std_arr[:self.state_dim], np.array([1,1]), x_std_arr[-self.state_dim:]))
         elif self.env_name=='Acrobot-v1':
@@ -139,11 +143,15 @@ class TrajModelTrainer():
             x_val_data = z_score_normalize(x_val_data, x_mean_arr, x_std_arr)
             y_val_data = z_score_normalize(y_val_data, y_mean_arr, y_std_arr)
         if self.norm_path:
-            if self.ho_rate==0:
-                with open(self.norm_path+'normalization_arr', 'wb') as pickle_file:
-                    pickle.dump(((x_mean_arr, x_std_arr),(y_mean_arr, y_std_arr)), pickle_file)
+            if self.env_name!='gazebo_ah':
+                if self.ho_rate==0:
+                    with open(self.norm_path+'normalization_arr', 'wb') as pickle_file:
+                        pickle.dump(((x_mean_arr, x_std_arr),(y_mean_arr, y_std_arr)), pickle_file)
+                else:
+                    with open(self.norm_path+'normalization_arr_ho'+str(self.ho_rate), 'wb') as pickle_file:
+                        pickle.dump(((x_mean_arr, x_std_arr),(y_mean_arr, y_std_arr)), pickle_file)
             else:
-                with open(self.norm_path+'normalization_arr_ho'+str(self.ho_rate), 'wb') as pickle_file:
+                with open(self.norm_path+'normalization_arr_sim_cont_trajT_bs512_model512_BS64_loadT_ho'+str(self.ho_rate)+'_py2', 'wb') as pickle_file:
                     pickle.dump(((x_mean_arr, x_std_arr),(y_mean_arr, y_std_arr)), pickle_file)
 
         x_data = torch.tensor(x_data, dtype=self.dtype)
