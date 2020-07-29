@@ -119,6 +119,7 @@ for obs_idxx in [20]:
             #ho_ls=['']
             #ho_ls=['_ho0.5','_ho0.6','_ho0.7','_ho0.8','_ho0.9','_ho0.95','_ho0.99']
             ho_ls=['_ho0.99','_ho0.995','_ho0.999']
+            ho_ls=['_ho0.995']
             for ho_suf in ho_ls:
                 print('Hold:',ho_suf[3:])
                 for Set in Sets:
@@ -209,7 +210,8 @@ for obs_idxx in [20]:
                         idx = [0, 2, 7, 8, 15]
                     elif Set.find('21c')>=0:
                         idx = [0]
-                    idx=[15]
+                    idx=[7]
+                    #idx=[15]
                     #if 'naive' in set_modes:
                     #    idx=[8]
 
@@ -236,9 +238,10 @@ for obs_idxx in [20]:
                     plt.plot(0, 119, 'ok', markersize=16, color ='r',label='Start')
                     #plt.text(-15, 123, 'start state', fontsize=16, color ='r')
                     plt.ylim([60, 140])
+                    #plt.xlim([-100,100])
                     plt.xlabel('x')
                     plt.ylabel('y')
-                    plt.legend()
+                    #plt.legend()
                     results_path='/Users/zsbjltwjj/Downloads/t42_hand/beliefspaceplanning/rollout_node/set/set'+Set+ ho_suf + '/results/'
                     if not os.path.exists(results_path):
                         os.makedirs(results_path)
@@ -403,7 +406,7 @@ for obs_idxx in [20]:
                                             ax.add_artist(obs)
                                 except:
                                     pass
-                                plt.plot(Straj[0,0], Straj[0,1], 'ok', markersize=16, color ='r',label='Start')
+                                #plt.plot(Straj[0,0], Straj[0,1], 'ok', markersize=16, color ='r',label='Start')
                                 plt.plot(Straj[:,0], Straj[:,1], '-k', linewidth = 2.7, label='Planned path')
                                 with open(pklfile,'rb') as f:  
                                     Pro = pickle.load(f,encoding='latin')

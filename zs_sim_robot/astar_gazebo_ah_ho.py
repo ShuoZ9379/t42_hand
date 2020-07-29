@@ -168,10 +168,14 @@ class mnode(object):
             self.f=self.f+self.ac_weight*w_ac
         #self.f=self.ng+h
         #self.f=self.step+h
-def mstep_isvalid(child,H1D,H2D,Obs,obs_dist,goal_loc,big_goal_radius):
+def mstep_isvalid(cur,ac,child,H1D,H2D,Obs,obs_dist,goal_loc,big_goal_radius):
     if not mstep_in_hull(child.state_h[:,:2],H1D,H2D):
         return False
     elif not ((child.state_h[:,2:]>=1).all() and (child.state_h[:,2:]<=120).all()): 
+        return False
+    elif cur.step==2 and (ac==np.array([-1,-1])).all() and (cur.action[0,:]==np.array([-1,-1])).all() and (cur.prev.action[0,:]==np.array([-1,-1])).all():
+        return False
+    elif cur.step==4 and (ac==np.array([-1,-1])).all() and (int((cur.action[0,:]==np.array([-1,-1])).all()) + (cur.prev.action[0,:]==np.array([-1,-1])).all() + (cur.prev.prev.action[0,:]==np.array([-1,-1])).all() + (cur.prev.prev.prev.action[0,:]==np.array([-1,-1])).all()>=3):
         return False
     elif child.state_h[-1,0]*goal_loc[0]<=0:
         return False
@@ -182,7 +186,7 @@ def mstep_isvalid(child,H1D,H2D,Obs,obs_dist,goal_loc,big_goal_radius):
             if not (np.linalg.norm(i-Obs[:,:2],axis=1)>obs_dist*1.2).all():
                 return False
         return True
-def mstep_isvalid_v2(child,H1D,H2D,Obs,obs_dist,goal_loc,big_goal_radius):
+def mstep_isvalid_v2(cur,ac,child,H1D,H2D,Obs,obs_dist,goal_loc,big_goal_radius):
     if not mstep_in_hull(child.state_h[:,:2],H1D,H2D):
         return False
     elif not ((child.state_h[:,2:]>=1).all() and (child.state_h[:,2:]<=120).all()): 
@@ -295,7 +299,7 @@ def Astar_discrete_mstep_stomodel(mode,ac_weight,num_steps,initial_state,goal_lo
                 for i in actions:
                     child_state,child_state_h=mstep_predict(num_steps,cur.state,i,model,x_std_arr,x_mean_arr,y_std_arr,y_mean_arr)
                     child=mnode(ac_weight,child_state,num_steps,child_state_h)
-                    if mstep_isvalid(child,H1D,H2D,Obs,obs_dist,goal_loc,big_goal_radius):
+                    if mstep_isvalid(cur,i,child,H1D,H2D,Obs,obs_dist,goal_loc,big_goal_radius):
                         if state_closed_set==[] or not np.any(np.all(np.isin(np.array(state_closed_set),child.state,True),axis=1)):
                             if state_fringe==[] or not np.any(np.all(np.isin(np.array(state_fringe),child.state,True),axis=1)):
                                 fringe.append(child)
@@ -364,9 +368,11 @@ if set_idx.find('20c'):
 #ho_modes=['_ho0.99']
 ho_modes=['_ho0.995','_ho0.999']
 ho_modes=['_ho0.999']
+ho_modes=['_ho0.995']
 #for goal_idx in [0,2,7,8,15]:
 #for goal_idx in [15]:
-for goal_idx in [0,2,7,8]:
+#for goal_idx in [0,2,7,8]:
+for goal_idx in [7]:
     for mode in ['_100ac2']:
         for ho_mode in ho_modes:
             for sdd in range(1,2):

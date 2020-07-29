@@ -1,0 +1,1 @@
+astar_goal7_run0_m100_obs0.75_ho0.995_plan: 0.0, 0.0

@@ -1,3 +1,4 @@
+#1 Million Data Totally
 import scipy.io
 import numpy as np 
 import pdb
@@ -95,8 +96,8 @@ def main(env_name,lr,nodes,epochs=50,ho_rate=0,data_file_suffix='train',model_na
     if ho_rate!=0:
         error_save_path+='_ho'+str(ho_rate)
     trainer = TrajModelTrainer(env_name, out, val_size=val_size, model_save_path=model_save_path, error_save_path=error_save_path, norm_path=norm_path, state_dim=state_dim, action_dim=action_dim, ho_rate=ho_rate) 
-    ### ho_rate 0: 270k training data, with 300k norm; other ho_rates: ... training data, with ... norm.
-    ### if time enough, train ho_rate 0 with 270k norm and then substitute current model for ho_rate=0.
+    ### All ho_rates: 0.9*xxxx training data, with xxx norm
+   
     norm=trainer.norm
 
     if retrain:

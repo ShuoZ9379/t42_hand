@@ -1,3 +1,4 @@
+#1.6 Million Data Totally
 import scipy.io
 import numpy as np 
 import pdb
@@ -49,7 +50,7 @@ def main(ho_rate=0.995,nodes=512,epochs=20,seed=0):
     all_eps_len=round(sum(eps_len)*(1-ho_rate))
     val_size = round(all_eps_len*held_out)
     print("Training Data Size: " + str(all_eps_len-val_size) + " Validation Data Size:" + str(val_size))
-
+    
     np.random.seed(seed)
     np.random.shuffle(out)
     save_path = './trans_model_data/'
