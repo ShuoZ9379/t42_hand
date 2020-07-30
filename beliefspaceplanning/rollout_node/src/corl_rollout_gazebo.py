@@ -14,7 +14,7 @@ def in_hull(p,H1,H2):
         return False
 
 
-rollout = 1
+rollout = 0
 comp = 'szhang'
 for obs_idxx in [20]:
 #for obs_idxx in [20,14]:
@@ -210,7 +210,7 @@ for obs_idxx in [20]:
                         idx = [0, 2, 7, 8, 15]
                     elif Set.find('21c')>=0:
                         idx = [0]
-                    idx=[7]
+                    #idx=[7]
                     #idx=[15]
                     #if 'naive' in set_modes:
                     #    idx=[8]

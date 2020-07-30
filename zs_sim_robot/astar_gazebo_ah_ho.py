@@ -175,7 +175,7 @@ def mstep_isvalid(cur,ac,child,H1D,H2D,Obs,obs_dist,goal_loc,big_goal_radius):
         return False
     elif cur.step==2 and (ac==np.array([-1,-1])).all() and (cur.action[0,:]==np.array([-1,-1])).all() and (cur.prev.action[0,:]==np.array([-1,-1])).all():
         return False
-    elif cur.step==4 and (ac==np.array([-1,-1])).all() and (int((cur.action[0,:]==np.array([-1,-1])).all()) + (cur.prev.action[0,:]==np.array([-1,-1])).all() + (cur.prev.prev.action[0,:]==np.array([-1,-1])).all() + (cur.prev.prev.prev.action[0,:]==np.array([-1,-1])).all()>=3):
+    elif cur.step==3 and (ac==np.array([-1,-1])).all() and (int((cur.action[0,:]==np.array([-1,-1])).all()) + (cur.prev.action[0,:]==np.array([-1,-1])).all() + (cur.prev.prev.action[0,:]==np.array([-1,-1])).all() + (cur.prev.prev.prev.action[0,:]==np.array([-1,-1])).all()>=2):
         return False
     elif child.state_h[-1,0]*goal_loc[0]<=0:
         return False
