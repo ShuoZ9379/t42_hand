@@ -406,7 +406,7 @@ for obs_idxx in [20]:
                                             ax.add_artist(obs)
                                 except:
                                     pass
-                                #plt.plot(Straj[0,0], Straj[0,1], 'ok', markersize=16, color ='r',label='Start')
+                                plt.plot(Straj[0,0], Straj[0,1], 'ok', markersize=16, color ='r',label='Start')
                                 plt.plot(Straj[:,0], Straj[:,1], '-k', linewidth = 2.7, label='Planned path')
                                 with open(pklfile,'rb') as f:  
                                     Pro = pickle.load(f,encoding='latin')
