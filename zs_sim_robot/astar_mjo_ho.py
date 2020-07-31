@@ -236,12 +236,17 @@ def mplot_planned_traj_reacher(mode,num_steps,set_path,initial_state,run_idx,pla
     
 #ho_modes=['']
 ho_modes=['_ho0.5','_ho0.6','_ho0.7','_ho0.8','_ho0.9','_ho0.95','_ho0.99']
+ho_modes=['_ho0.995','_ho0.999']
+ho_modes=['_ho0.999']
 env_name='Reacher-v2'
 model_name_suffix=''
 env=gym.make(env_name)
 for ho_mode in ho_modes:
     print("Ho:",ho_mode[3:])
-    model_save_path='./trans_model_data'+model_name_suffix+'/'+env_name+'_model/'+env_name+'_model_lr0.0001_nodes512_seed0'+ho_mode+'_epochs_50'
+    if ho_mode=='_ho0.999':
+        model_save_path='./trans_model_data'+model_name_suffix+'/'+env_name+'_model/'+env_name+'_model_lr0.0001_nodes512_seed0'+ho_mode+'_epochs_100'
+    else:
+        model_save_path='./trans_model_data'+model_name_suffix+'/'+env_name+'_model/'+env_name+'_model_lr0.0001_nodes512_seed0'+ho_mode+'_epochs_50'
     norm_path='./trans_model_data/'+env_name+'_normalization/normalization_arr'+ho_mode
     with open(model_save_path, 'rb') as pickle_file:
         model = torch.load(pickle_file, map_location='cpu')

@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import gym
 import glob,os,time,pickle
 from scipy.io import loadmat
+import sys
 
 def get_y(plan_path):
     return -plan_path[:,0]-(plan_path[:,0]*plan_path[:,2]-plan_path[:,1]*plan_path[:,3])
@@ -100,10 +101,11 @@ def rollout_acro(plan_action_path,run_idx,num_ro):
     return Pro
 
 
-rollout = 0
+rollout = int(sys.argv[1])
 num_ro = 10
 #ho_modes=['']
 ho_modes=['_ho0.5','_ho0.6','_ho0.7','_ho0.8','_ho0.9','_ho0.95','_ho0.99']
+ho_modes=['_ho0.99','_ho0.995','_ho0.999']
 #Sets_ls = ['astar','policy']
 Sets_ls = ['astar']
 #env_id_ls = ['Reacher-v2','Acrobot-v1']
@@ -197,6 +199,7 @@ for ho_mode in ho_modes:
                             fig, ax = plt.subplots(figsize=(8,8))
                             plt.plot(Straj[0,0], Straj[0,1], 'ok', markersize=16, color ='r',label='Start')
                             goal_plan = plt.Circle((goal_loc[0], goal_loc[1]), r, color='m')
+                            plt.text(goal_loc[0]-0.01, goal_loc[1]-0.01,str(num),fontsize=20)
                             ax.add_artist(goal_plan)
                             plt.plot(Straj[:,0], Straj[:,1], '-k', linewidth = 2.7, label='Planned path')
 
