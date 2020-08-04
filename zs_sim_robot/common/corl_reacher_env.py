@@ -36,7 +36,7 @@ class action_space(object):
 		return a
 
 class corl_reacher(object):
-	def __init__(self,env_seed=0,ctrl_rew=True,with_reach_goal_terminal=False):
+	def __init__(self,env_seed=0,ho=0,ctrl_rew=True,with_reach_goal_terminal=False):
 		self.env_name='corl_Reacher-v2'
 		torch.manual_seed(env_seed)
 		self.gym_env=gym.make('Reacher-v2')
@@ -50,8 +50,17 @@ class corl_reacher(object):
 		self.metadata=None
 		self.horizon=50
 
-		self.reacher_model_path='./trans_model_data/Reacher-v2_model_lr0.0001_nodes512_seed0_epochs_50'
-		self.norm_path='./trans_model_data/Reacher-v2_normalization/normalization_arr'
+		if ho==0.999:
+			self.reacher_model_path='./trans_model_data/Reacher-v2_model/Reacher-v2_model_lr0.0001_nodes512_seed0_ho0.999_epochs_100'
+		elif ho==0:
+			self.reacher_model_path='./trans_model_data/Reacher-v2_model/Reacher-v2_model_lr0.0001_nodes512_seed0_epochs_50'
+		else:
+			self.reacher_model_path='./trans_model_data/Reacher-v2_model/Reacher-v2_model_lr0.0001_nodes512_seed0_ho'+str(ho)+'_epochs_50'
+		if ho==0:
+			self.norm_path='./trans_model_data/Reacher-v2_normalization/normalization_arr'
+		else:
+			self.norm_path='./trans_model_data/Reacher-v2_normalization/normalization_arr_ho'+str(ho)
+			
 		with open(self.reacher_model_path, 'rb') as pickle_file:
 			self.reacher_model = torch.load(pickle_file, map_location='cpu')
 		with open(self.norm_path, 'rb') as pickle_file:

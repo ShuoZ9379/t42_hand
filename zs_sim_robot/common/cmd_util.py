@@ -15,7 +15,7 @@ from common.vec_env.dummy_vec_env import DummyVecEnv
 from common import retro_wrappers
 from common.wrappers import ClipActionsWrapper
 
-def make_vec_env(env_id, env_type, horizon, with_obs, with_obs_end, obs_idx, obs_pen, sparse, ah_with_goal_loc, ah_goal_loc_idx, ah_with_reach_goal, ctrl_rwd, final_rwd, ctrl_rwd_coef, goal_height, num_env, seed,
+def make_vec_env(env_id, env_type, horizon, with_obs, with_obs_end, obs_idx, obs_pen, sparse, ah_with_goal_loc, ah_goal_loc_idx, ah_with_reach_goal, ctrl_rwd, final_rwd, ctrl_rwd_coef, ho, goal_height, num_env, seed,
                  wrapper_kwargs=None,
                  env_kwargs=None,
                  start_index=0,
@@ -40,12 +40,12 @@ def make_vec_env(env_id, env_type, horizon, with_obs, with_obs_end, obs_idx, obs
         if env_id=='ah':
             from common.ah_env import ah_env_withobs, ah_env_noobs
             if with_obs:
-                env = ah_env_withobs(obs_idx=obs_idx,env_seed=seed,ah_goal_loc_idx=ah_goal_loc_idx,ctrl_rwd=ctrl_rwd,ctrl_rwd_coef=ctrl_rwd_coef,with_reach_goal_terminal=ah_with_reach_goal,state_with_goal_loc=ah_with_goal_loc,with_obs_end=with_obs_end,sparse=sparse,obs_pen=obs_pen,final_rwd=final_rwd,horizon=horizon)
+                env = ah_env_withobs(obs_idx=obs_idx,env_seed=seed,ah_goal_loc_idx=ah_goal_loc_idx,ctrl_rwd=ctrl_rwd,ctrl_rwd_coef=ctrl_rwd_coef,with_reach_goal_terminal=ah_with_reach_goal,state_with_goal_loc=ah_with_goal_loc,with_obs_end=with_obs_end,sparse=sparse,obs_pen=obs_pen,final_rwd=final_rwd,horizon=horizon,ho=ho)
             else:
-                env = ah_env_noobs(env_seed=seed,ah_goal_loc_idx=ah_goal_loc_idx,ctrl_rwd=ctrl_rwd,ctrl_rwd_coef=ctrl_rwd_coef,with_reach_goal_terminal=ah_with_reach_goal,state_with_goal_loc=ah_with_goal_loc,sparse=sparse,final_rwd=final_rwd,horizon=horizon)
+                env = ah_env_noobs(env_seed=seed,ah_goal_loc_idx=ah_goal_loc_idx,ctrl_rwd=ctrl_rwd,ctrl_rwd_coef=ctrl_rwd_coef,with_reach_goal_terminal=ah_with_reach_goal,state_with_goal_loc=ah_with_goal_loc,sparse=sparse,final_rwd=final_rwd,horizon=horizon,ho=ho)
         elif env_id=='corl_Reacher-v2':
             from common.corl_reacher_env import corl_reacher
-            env = corl_reacher(env_seed=seed)
+            env = corl_reacher(env_seed=seed,ho=ho)
         elif env_id=='corl_Acrobot-v1':
             from common.corl_acrobot_env import corl_acrobot
             env = corl_acrobot(env_seed=seed,goal_height=goal_height)
@@ -89,6 +89,7 @@ def common_arg_parser():
     parser.add_argument('--ctrl_rwd', help='adaptive hand with control reward or not', type=int, default=0)
     parser.add_argument('--ctrl_rwd_coef', help='adaptive hand control reward coefficient', type=int, default=1)
     parser.add_argument('--horizon', help='adaptive hand horizon', type=int, default=2000)
+    parser.add_argument('--ho', help='adaptive hand ho', type=float, default=0.0)
     parser.add_argument('--goal_height', help='goal height for Acrobot-v1', type=float, default=1.)
     parser.add_argument('--final_rwd', help='final reward for adaptive hand', type=float, default=0.)
     parser.add_argument('--sparse', help='sparse reward or not', type=int, default=0)

@@ -20,10 +20,6 @@ if not os.path.exists('./ppo2_results/eval/'):
     os.makedirs('./ppo2_results/eval/')
 if not os.path.exists('./ppo2_results/single_loss/'):
     os.makedirs('./ppo2_results/single_loss/')
-if not os.path.exists('./ppo2_results/test_ah_single_loss_withreachgoal_ctrl1/'):
-    os.makedirs('./ppo2_results/test_ah_single_loss_withreachgoal_ctrl1/')
-if not os.path.exists('./ppo2_results/test_real_ah_single_loss_withreachgoal_ctrl1/'):
-    os.makedirs('./ppo2_results/test_real_ah_single_loss_withreachgoal_ctrl1/')
 
 def constfn(val):
     def f(_):
@@ -34,7 +30,7 @@ def constfn(val):
 def safemean(xs):
     return np.nan if len(xs) == 0 else np.mean(xs)
 
-def learn(*, network, env, env_type, total_timesteps, eval_env = None, need_eval=False, num_eval_eps=1, compare=False,compare_ah_idx=8,reacher_sd=1,acrobot_sd=1,
+def learn(*, network, env, env_type, total_timesteps, eval_env = None, need_eval=False, num_eval_eps=1, compare=False,compare_ah_idx=8,reacher_sd=1,acrobot_sd=1,ho=0,
             seed=None, nsteps=2048, ent_coef=0.0, lr=3e-4,lr_factor=3,
             vf_coef=0.5,  max_grad_norm=0.5, gamma=0.99, lam=0.95,
             log_interval=1, nminibatches=4, noptepochs=4, cliprange=0.2,
@@ -336,14 +332,14 @@ def learn(*, network, env, env_type, total_timesteps, eval_env = None, need_eval
                 plot_eval_eps(seed,observ,env,eval_eps,compare)
             else:
                 if env.env_name=='ah' or env.env_name=='real_ah':
-                    plot_eval_eps(seed,observ,env,compare_ah_idx,compare,pre_suf=single_loss_suf)
+                    plot_eval_eps(ho,seed,observ,env,compare_ah_idx,compare,pre_suf=single_loss_suf)
                 elif env.env_name=='corl_Reacher-v2':
-                    plot_eval_eps(seed,observ,env,reacher_sd,compare)
+                    plot_eval_eps(ho,seed,observ,env,reacher_sd,compare)
                 elif env.env_name=='corl_Acrobot-v1':
-                    plot_eval_eps(seed,observ,env,acrobot_sd,compare)
+                    plot_eval_eps(ho,seed,observ,env,acrobot_sd,compare)
     return model
 
-def plot_eval_eps(seed,observ,env,idx,compare,pre_suf=''):
+def plot_eval_eps(ho,seed,observ,env,idx,compare,pre_suf=''):
     if env.env_name=='ah':
         if env.state_with_goal_loc:
             goal_loc=observ[0,4:6]
@@ -403,6 +399,8 @@ def plot_eval_eps(seed,observ,env,idx,compare,pre_suf=''):
         plt.xlabel('x')
         plt.ylabel('y')
         plt.legend()
+        if ho!=0:
+            pre_suf='_ho'+str(ho)
         if not compare:
             plt.savefig('./ppo2_results/eval/Eval_model_seed_'+str(seed)+'_lr_'+str(lr_factor)+'_total_timesteps_'+str(total_timesteps)+'_'+env.env_name+'_'+str(idx)+pre_suf+'_not_compare.png',dpi=200)
         else:

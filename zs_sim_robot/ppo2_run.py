@@ -54,6 +54,7 @@ def train(args, extra_args):
     print('env_type: {}'.format(env_type))
     total_timesteps = int(args.num_timesteps)
     seed = args.seed
+    ho=args.ho
     #print(args,extra_args)
     
     learn = get_learn_function(args.alg)
@@ -75,6 +76,7 @@ def train(args, extra_args):
         env_type=env_type,
         total_timesteps=total_timesteps,
         seed=seed,
+        ho=ho,
         **alg_kwargs
     )
     return model, env
@@ -104,7 +106,7 @@ def build_env(args):
         config.gpu_options.allow_growth = True
         get_session(config=config)
         flatten_dict_observations = alg not in {'her'}
-        env = make_vec_env(env_id, env_type, args.horizon, args.with_obs, args.with_obs_end, args.obs_idx, args.obs_pen, args.sparse, args.ah_with_goal_loc, args.ah_goal_loc_idx, args.ah_with_reach_goal, args.ctrl_rwd, args.final_rwd, args.ctrl_rwd_coef, args.goal_height, args.num_env or 1, seed, reward_scale=args.reward_scale, flatten_dict_observations=flatten_dict_observations)
+        env = make_vec_env(env_id, env_type, args.horizon, args.with_obs, args.with_obs_end, args.obs_idx, args.obs_pen, args.sparse, args.ah_with_goal_loc, args.ah_goal_loc_idx, args.ah_with_reach_goal, args.ctrl_rwd, args.final_rwd, args.ctrl_rwd_coef, args.ho, args.goal_height, args.num_env or 1, seed, reward_scale=args.reward_scale, flatten_dict_observations=flatten_dict_observations)
 
         #if env_type == 'mujoco':
         #    env = VecNormalize(env, use_tf=True)

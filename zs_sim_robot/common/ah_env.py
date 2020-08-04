@@ -45,7 +45,7 @@ class action_space(object):
 		return a
 
 class ah_env_noobs(object):
-	def __init__(self,env_seed=0,ah_goal_loc_idx=8,ctrl_rwd=False,ctrl_rwd_coef=1,with_horizon_terminal=True,with_reach_goal_terminal=True,state_with_goal_loc=False,state_with_goal_radius=False,sparse=0,final_rwd=0,horizon=2000):
+	def __init__(self,env_seed=0,ah_goal_loc_idx=8,ctrl_rwd=False,ctrl_rwd_coef=1,with_horizon_terminal=True,with_reach_goal_terminal=True,state_with_goal_loc=False,state_with_goal_radius=False,sparse=0,final_rwd=0,horizon=2000,ho=0):
 		self.env_name='ah'
 		self.with_obs=0
 		self.seed=env_seed
@@ -91,8 +91,13 @@ class ah_env_noobs(object):
 		if not self.state_with_goal_loc:
 			self.goal_loc=self.goals[self.goal_loc_idx]
 
-		self.ah_model_path='./trans_model_data/sim_cont_trajT_bs512_model512_BS64_loadT.pkl'
-		self.norm_path='./trans_model_data/gazebo_ah_normalization/normalization_arr_sim_cont_trajT_bs512_model512_BS64_loadT_py2'
+		if ho==0:
+			self.ah_model_path='./trans_model_data/gazebo_ah_model/sim_cont_trajT_bs512_model512_BS64_loadT.pkl'
+			self.norm_path='./trans_model_data/gazebo_ah_normalization/normalization_arr_sim_cont_trajT_bs512_model512_BS64_loadT_py2'
+		else:
+			self.ah_model_path='./trans_model_data/gazebo_ah_model/sim_cont_trajT_bs512_model512_BS64_loadT_ho'+str(ho)
+			self.norm_path='./trans_model_data/gazebo_ah_normalization/normalization_arr_sim_cont_trajT_bs512_model512_BS64_loadT_ho'+str(ho)+'_py2'
+
 		with open(self.ah_model_path, 'rb') as pickle_file:
 			self.ah_model = torch.load(pickle_file, map_location='cpu')
 		with open(self.norm_path, 'rb') as pickle_file:
@@ -231,7 +236,7 @@ class ah_env_noobs(object):
 		return self.num_steps, self.cur_state
 
 class ah_env_withobs(object):
-	def __init__(self,obs_idx=20,env_seed=0,ah_goal_loc_idx=8,ctrl_rwd=False,ctrl_rwd_coef=1,with_horizon_terminal=True,with_reach_goal_terminal=True,state_with_goal_loc=False,state_with_goal_radius=False,with_obs_end=1,sparse=0,obs_pen=1e6,final_rwd=0,horizon=2000):
+	def __init__(self,obs_idx=20,env_seed=0,ah_goal_loc_idx=8,ctrl_rwd=False,ctrl_rwd_coef=1,with_horizon_terminal=True,with_reach_goal_terminal=True,state_with_goal_loc=False,state_with_goal_radius=False,with_obs_end=1,sparse=0,obs_pen=1e6,final_rwd=0,horizon=2000,ho=0):
 		self.env_name='ah'
 		self.with_obs=1
 		self.with_obs_end=with_obs_end
@@ -288,8 +293,13 @@ class ah_env_withobs(object):
 		if not self.state_with_goal_loc:
 			self.goal_loc=self.goals[self.goal_loc_idx]
 
-		self.ah_model_path='./trans_model_data/sim_cont_trajT_bs512_model512_BS64_loadT.pkl'
-		self.norm_path='./trans_model_data/gazebo_ah_normalization/normalization_arr_sim_cont_trajT_bs512_model512_BS64_loadT_py2'
+		if ho==0:
+			self.ah_model_path='./trans_model_data/gazebo_ah_model/sim_cont_trajT_bs512_model512_BS64_loadT.pkl'
+			self.norm_path='./trans_model_data/gazebo_ah_normalization/normalization_arr_sim_cont_trajT_bs512_model512_BS64_loadT_py2'
+		else:
+			self.ah_model_path='./trans_model_data/gazebo_ah_model/sim_cont_trajT_bs512_model512_BS64_loadT_ho'+str(ho)
+			self.norm_path='./trans_model_data/gazebo_ah_normalization/normalization_arr_sim_cont_trajT_bs512_model512_BS64_loadT_ho'+str(ho)+'_py2'
+
 		with open(self.ah_model_path, 'rb') as pickle_file:
 			self.ah_model = torch.load(pickle_file, map_location='cpu')
 		with open(self.norm_path, 'rb') as pickle_file:
