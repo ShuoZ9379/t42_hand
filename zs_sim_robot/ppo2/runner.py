@@ -27,6 +27,9 @@ class Runner(AbstractEnvRunner):
         mb_final_obs=[]
         mb_states = self.states
         epinfos = []
+        succ=False
+        best_eps_ret=-1e9
+        best_eps_len=-1e9
 
         if not do_eval:
             # For n in range number of steps
@@ -52,6 +55,11 @@ class Runner(AbstractEnvRunner):
                     maybeepinfo = info.get('episode')
                     if maybeepinfo: 
                         epinfos.append(maybeepinfo)
+                        if self.env.suc:
+                            succ=True
+                            if maybeepinfo["r"]>=best_eps_ret:
+                                best_eps_ret=maybeepinfo["r"]
+                                best_eps_len=maybeepinfo["l"]
                         if no_dummy:
                             self.obs[:] = self.env.reset(**self.kwargs)
                 mb_rewards.append(rewards)
@@ -125,6 +133,8 @@ class Runner(AbstractEnvRunner):
                     if maybeepinfo: 
                         epinfos.append(maybeepinfo)
                         mb_final_obs.append(self.obs.copy())
+                        if self.env.suc and not succ:
+                            succ=True
                         if no_dummy:
                             self.obs[:] = self.env.reset(**self.kwargs)
                             if compare:
@@ -183,10 +193,10 @@ class Runner(AbstractEnvRunner):
         mb_returns = mb_advs + mb_values
         if self.env.env_name=='real_ah' and do_eval:
             return (*map(sf01, (mb_obs, mb_returns, mb_dones, mb_actions, mb_values, mb_neglogpacs)),
-                mb_states, epinfos, mb_final_obs,mb_four_obs)
+                mb_states, epinfos, mb_final_obs,mb_four_obs,succ,best_eps_ret,best_eps_len)
         else:
             return (*map(sf01, (mb_obs, mb_returns, mb_dones, mb_actions, mb_values, mb_neglogpacs)),
-                mb_states, epinfos, mb_final_obs)
+                mb_states, epinfos, mb_final_obs,succ,best_eps_ret,best_eps_len)
 
 def sf01(arr):
     """

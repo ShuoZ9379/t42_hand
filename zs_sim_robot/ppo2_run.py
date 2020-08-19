@@ -75,8 +75,9 @@ def train(args, extra_args):
         env=env,
         env_type=env_type,
         total_timesteps=total_timesteps,
-        seed=seed,
+        save_path=osp.expanduser(args.save_path),
         ho=ho,
+        seed=seed,
         **alg_kwargs
     )
     return model, env

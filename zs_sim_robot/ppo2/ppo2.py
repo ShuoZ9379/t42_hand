@@ -30,7 +30,7 @@ def constfn(val):
 def safemean(xs):
     return np.nan if len(xs) == 0 else np.mean(xs)
 
-def learn(*, network, env, env_type, total_timesteps, eval_env = None, need_eval=False, num_eval_eps=1, compare=False,compare_ah_idx=8,reacher_sd=1,acrobot_sd=1,ho=0,
+def learn(*, network, env, env_type, total_timesteps, save_path, eval_env = None, need_eval=False, num_eval_eps=1, compare=False,compare_ah_idx=8,reacher_sd=1,acrobot_sd=1,ho=0,find_best=0,
             seed=None, nsteps=2048, ent_coef=0.0, lr=3e-4,lr_factor=3,
             vf_coef=0.5,  max_grad_norm=0.5, gamma=0.99, lam=0.95,
             log_interval=1, nminibatches=4, noptepochs=4, cliprange=0.2,
@@ -109,6 +109,7 @@ def learn(*, network, env, env_type, total_timesteps, eval_env = None, need_eval
     print(network_kwargs)
     policy = build_policy(env, network, **network_kwargs)
 
+    best_model_ls,best_ret_ls=[],[]
     # Get the nb of env
     #nenvs = env.num_envs
     nenvs=1
@@ -147,7 +148,7 @@ def learn(*, network, env, env_type, total_timesteps, eval_env = None, need_eval
 
     # Start total timer
     tfirststart = time.perf_counter()
-    models_ls,eprewmean_ls=[],[]
+    models_ls,eprewmean_ls,best_eps_ret_ls,best_eps_len_ls,best_eps_update_ls=[],[],[],[],[]
 
     if not (env_type=='corl' and need_eval==True and eval_env is None):
         nupdates = total_timesteps//nbatch
@@ -164,15 +165,27 @@ def learn(*, network, env, env_type, total_timesteps, eval_env = None, need_eval
             if update % log_interval == 0 and is_mpi_root: logger.info('Stepping environment...')
 
             # Get minibatch
-            obs, returns, masks, actions, values, neglogpacs, states, epinfos, final_obs = runner.run() #pylint: disable=E0632
+            obs, returns, masks, actions, values, neglogpacs, states, epinfos, final_obs, succ, best_eps_ret, best_eps_len = runner.run() #pylint: disable=E0632
             if eval_env is not None:
-                eval_obs, eval_returns, eval_masks, eval_actions, eval_values, eval_neglogpacs, eval_states, eval_epinfos, eval_final_obs= eval_runner.run() #pylint: disable=E0632
+                eval_obs, eval_returns, eval_masks, eval_actions, eval_values, eval_neglogpacs, eval_states, eval_epinfos, eval_final_obs, eval_succ, eval_best_eps_ret, eval_best_eps_len= eval_runner.run() #pylint: disable=E0632
             
             if update % log_interval == 0 and is_mpi_root: logger.info('Done.')
 
             epinfobuf.extend(epinfos)
             if eval_env is not None:
                 eval_epinfobuf.extend(eval_epinfos)
+
+
+            if env_type=='corl' and find_best and (env.env_name=='ah' or env.env_name=='real_ah') and succ:
+                logger.logkv('saving a success model update',update-1)
+                model.save(save_path+'_find_best_update_'+str(update-1))
+                best_eps_ret_ls.append(best_eps_ret)
+                best_eps_len_ls.append(best_eps_len)
+                best_eps_update_ls.append(update-1)
+                logger.logkv('success episode return',best_eps_ret)
+                logger.logkv('success episode length',best_eps_len)
+                logger.dumpkvs()
+
 
             # Here what we're going to do is for each minibatch calculate the loss and append it.
             mblossvals = []
@@ -280,9 +293,14 @@ def learn(*, network, env, env_type, total_timesteps, eval_env = None, need_eval
                 #print('Saving best model2 to', best_model_path_a)
                 logger.logkv('best update 1', best_update)
                 logger.logkv('best update 2', best_update_a)
-                logger.dumpkvs()
                 #best_model.save(best_model_path)
                 #best_model_a.save(best_model_path_a)
+                if find_best and len(best_eps_ret_ls)!=0:
+                    logger.logkv('best eps return update: update',best_eps_update_ls[np.argmax(best_eps_ret_ls)])
+                    logger.logkv('best eps return:',np.max(best_eps_ret_ls))
+                    logger.logkv('best eps length update: update',best_eps_update_ls[np.argmin(best_eps_len_ls)])
+                    logger.logkv('best eps length:',np.min(best_eps_len_ls))
+                logger.dumpkvs()
             #else:
             #    best_model=model
             #    best_model_a=model
@@ -296,7 +314,7 @@ def learn(*, network, env, env_type, total_timesteps, eval_env = None, need_eval
             lrnow = lr(1.0)
             cliprangenow = cliprange(1.0)
             logger.info('Evaluation: Stepping environment...')
-            obs, returns, masks, actions, values, neglogpacs, states, epinfos, final_obs = runner.run(do_eval=True,num_eval_eps=num_eval_eps,compare=compare,compare_ah_idx=compare_ah_idx,reacher_sd=reacher_sd,acrobot_sd=acrobot_sd) #pylint: disable=E0632
+            obs, returns, masks, actions, values, neglogpacs, states, epinfos, final_obs, succ, best_eps_ret, best_eps_len = runner.run(do_eval=True,num_eval_eps=num_eval_eps,compare=compare,compare_ah_idx=compare_ah_idx,reacher_sd=reacher_sd,acrobot_sd=acrobot_sd) #pylint: disable=E0632
             logger.info('Evaluation: Done.')
             do_eval_epinfobuf=deque(maxlen=100)
             do_eval_epinfobuf.extend(epinfos)

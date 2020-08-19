@@ -47,6 +47,7 @@ class action_space(object):
 class ah_env_noobs(object):
 	def __init__(self,env_seed=0,ah_goal_loc_idx=8,ctrl_rwd=False,ctrl_rwd_coef=1,with_horizon_terminal=True,with_reach_goal_terminal=True,state_with_goal_loc=False,state_with_goal_radius=False,sparse=0,final_rwd=0,horizon=2000,ho=0):
 		self.env_name='ah'
+		self.suc=False
 		self.with_obs=0
 		self.seed=env_seed
 		self.final_rwd=final_rwd
@@ -151,6 +152,7 @@ class ah_env_noobs(object):
 		else:
 			if not self.state_with_goal_radius:
 				idx=np.random.randint(self.goals.shape[0])
+				#print('Goal:',idx)
 				self.goal_loc=self.goals[idx,:]
 				self.goal_radius=0.6875*big_goal_radius
 			else:
@@ -165,6 +167,7 @@ class ah_env_noobs(object):
 				self.cur_state=np.concatenate((self.init_state,self.goal_loc,np.array([self.goal_radius])))
 		else:
 			self.cur_state=self.init_state
+		self.suc=False
 		return self.cur_state
 
 	def compare_reset(self,goal_loc,cur_state):
@@ -203,26 +206,32 @@ class ah_env_noobs(object):
 			if self.with_reach_goal_terminal and np.linalg.norm(self.goal_loc-self.cur_state[:2])<=self.goal_radius:
 				#reward=0.
 				#print('With reach goal terminal: reached within horizon')
+				print('OK!')
 				reward+=self.final_rwd
+				self.suc=True
 				done=True
 			elif self.with_horizon_terminal and self.num_steps>=self.horizon:
 				#if np.linalg.norm(self.goal_loc-self.cur_state[:2])<=self.goal_radius:
 					#print('No reach goal terminal: reached at horizon')
 				#else:
 					#print('not reached within horizon')
+				print('bbb')
 				done=True
 			else:
 				done=False
 		else:
 			if self.with_reach_goal_terminal and np.linalg.norm(self.goal_loc-self.cur_state[:2])<=self.goal_radius:
 			#	print('With reach goal terminal: reached within horizon')
+				print('OK!')
 				reward=0
 				done=True
+				self.suc=True
 			elif self.with_horizon_terminal and self.num_steps>=self.horizon:
 			#	if np.linalg.norm(self.goal_loc-self.cur_state[:2])<=self.goal_radius:
 			#		print('No reach goal terminal: reached at horizon')
 			#	else:
 			#		print('not reached within horizon')
+				print('bbb')
 				reward=-1
 				done=True
 			else:
@@ -238,6 +247,7 @@ class ah_env_noobs(object):
 class ah_env_withobs(object):
 	def __init__(self,obs_idx=20,env_seed=0,ah_goal_loc_idx=8,ctrl_rwd=False,ctrl_rwd_coef=1,with_horizon_terminal=True,with_reach_goal_terminal=True,state_with_goal_loc=False,state_with_goal_radius=False,with_obs_end=1,sparse=0,obs_pen=1e6,final_rwd=0,horizon=2000,ho=0):
 		self.env_name='ah'
+		self.suc=False
 		self.with_obs=1
 		self.with_obs_end=with_obs_end
 		self.obs_pen=obs_pen
@@ -357,6 +367,7 @@ class ah_env_withobs(object):
 			if not self.state_with_goal_radius:
 				if self.obs_idx!=14:
 					idx=np.random.randint(self.goals.shape[0])
+					#print('Goal:',idx)
 					self.goal_loc=self.goals[idx,:]
 				self.goal_radius=0.6875*big_goal_radius
 			else:
@@ -371,6 +382,7 @@ class ah_env_withobs(object):
 				self.cur_state=np.concatenate((self.init_state,self.goal_loc,np.array([self.goal_radius])))
 		else:
 			self.cur_state=self.init_state
+		self.suc=False
 		return self.cur_state
 
 	def compare_reset(self,goal_loc,cur_state):
@@ -421,7 +433,10 @@ class ah_env_withobs(object):
 					print('FOUND!')
 					raise
 				print('OK!')
+				#raise
+				#input("Press Enter for next Episode")
 				reward+=self.final_rwd
+				self.suc=True
 				done=True
 			elif self.with_horizon_terminal and self.num_steps>=self.horizon:
 			#	if np.linalg.norm(self.goal_loc-self.cur_state[:2])<=self.goal_radius:
@@ -435,7 +450,7 @@ class ah_env_withobs(object):
 
 		else:
 			if not (np.linalg.norm(self.Obs-self.cur_state[:2],axis=1)>self.obs_dist*1.2).all():
-			#	print('obstacle collision')
+				#	print('obstacle collision)		
 				reward=-1-self.horizon
 				if self.with_obs_end:
 					print('aaa')
@@ -444,7 +459,14 @@ class ah_env_withobs(object):
 					done=False
 			elif self.with_reach_goal_terminal and np.linalg.norm(self.goal_loc-self.cur_state[:2])<=self.goal_radius:
 			#	print('With reach goal terminal: reached within horizon')
+				if self.obs_idx==14:
+					print('FOUND!')
+					raise
+				print('OK!')
+				#raise
+				#input("Press Enter for next Episode")
 				reward=0
+				self.suc=True
 				done=True
 			elif self.with_horizon_terminal and self.num_steps>=self.horizon:
 			#	if np.linalg.norm(self.goal_loc-self.cur_state[:2])<=self.goal_radius:
@@ -452,6 +474,7 @@ class ah_env_withobs(object):
 			#	else:
 			#		print('not reached within horizon')
 				reward=-1
+				print('bbb')
 				done=True
 			else:
 				reward=-1

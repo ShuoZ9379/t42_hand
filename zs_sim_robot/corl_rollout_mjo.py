@@ -106,8 +106,10 @@ num_ro = 10
 #ho_modes=['']
 ho_modes=['_ho0.5','_ho0.6','_ho0.7','_ho0.8','_ho0.9','_ho0.95','_ho0.99']
 ho_modes=['_ho0.99','_ho0.995','_ho0.999']
+ho_modes=['_ho0.999','']
 #Sets_ls = ['astar','policy']
 Sets_ls = ['astar']
+Sets_ls = ['policy']
 #env_id_ls = ['Reacher-v2','Acrobot-v1']
 env_id_ls = ['Reacher-v2']
 
