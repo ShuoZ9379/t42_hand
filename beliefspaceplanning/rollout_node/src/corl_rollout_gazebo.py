@@ -14,7 +14,7 @@ def in_hull(p,H1,H2):
         return False
 
 
-rollout = 0
+rollout = 1
 comp = 'szhang'
 for obs_idxx in [20]:
 #for obs_idxx in [20,14]:
@@ -22,8 +22,10 @@ for obs_idxx in [20]:
         big_goal_radius=5
     elif obs_idxx==20:
         big_goal_radius=8
-    mode_ls=['astar']
-    #mode_ls=['policy']
+    #ah_with_goal_loc=1
+    ah_with_goal_loc=0
+    #mode_ls=['astar']
+    mode_ls=['policy']
     #mode_ls=['astar','policy']
     for mode in mode_ls:
         if mode == 'astar':
@@ -33,7 +35,10 @@ for obs_idxx in [20]:
                 Sets = ['21c_100ac2_14dev_step100_weight10000']
             set_modes = ['astar']
         elif obs_idxx==20 and mode == 'policy':
-            Sets = ['20c_policy_withgoalloc_OBS']
+            if ah_with_goal_loc:
+                Sets = ['20c_policy_withgoalloc_OBS']
+            else:
+                Sets = ['20c_policy_nogoalloc_OBS']
             set_modes = ['policy_OBS']
         elif obs_idxx==14 and mode == 'policy':
             continue
@@ -52,7 +57,8 @@ for obs_idxx in [20]:
 
             #ho_ls=['']
             #ho_ls=['_ho0.5','_ho0.6','_ho0.7','_ho0.8','_ho0.9','_ho0.95','_ho0.99']
-            ho_ls=['_ho0.99','_ho0.995','_ho0.999']
+            #ho_ls=['_ho0.99','_ho0.995','_ho0.999']
+            ho_ls=['_ho0.999']
             for ho_suf in ho_ls:
                 for Set in Sets:
                     for set_mode in set_modes:
@@ -118,8 +124,9 @@ for obs_idxx in [20]:
         else:
             #ho_ls=['']
             #ho_ls=['_ho0.5','_ho0.6','_ho0.7','_ho0.8','_ho0.9','_ho0.95','_ho0.99']
-            ho_ls=['_ho0.99','_ho0.995','_ho0.999']
-            ho_ls=['_ho0.995']
+            #ho_ls=['_ho0.99','_ho0.995','_ho0.999']
+            #ho_ls=['_ho0.995']
+            ho_ls=['_ho0.999']
             for ho_suf in ho_ls:
                 print('Hold:',ho_suf[3:])
                 for Set in Sets:
