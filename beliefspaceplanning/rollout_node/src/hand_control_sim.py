@@ -118,6 +118,7 @@ class hand_control():
         self.obs_size=msg.obs_size
         self.goal_idx=msg.goal_idx
         self.big_goal_radius=msg.big_goal_radius
+        self.sparse=msg.sparse
         if self.obs_idx==14:
             self.goal=self.horseshoe_goals[self.goal_idx]
             self.obs_size=0.5

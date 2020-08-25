@@ -24,6 +24,10 @@ for obs_idxx in [20]:
         big_goal_radius=8
     #ah_with_goal_loc=1
     ah_with_goal_loc=0
+    if ah_with_goal_loc:
+        sparse=0
+    else:
+        sparse=1
     #mode_ls=['astar']
     mode_ls=['policy']
     #mode_ls=['astar','policy']
@@ -115,7 +119,7 @@ for obs_idxx in [20]:
                             Pro = []
                             for j in range(10):
                                 print("Rollout number " + str(j) + ".")
-                                Sro = np.array(rollout_srv(Af, [0,0,0,0],[obs_idxx],[obs_size],[num],[big_goal_radius]).states).reshape(-1,state_dim)                    
+                                Sro = np.array(rollout_srv(Af, [0,0,0,0],[obs_idxx],[obs_size],[num],[big_goal_radius],[sparse]).states).reshape(-1,state_dim)                    
                                 Pro.append(Sro)
                                 with open(pklfile, 'wb') as f: 
                                     pickle.dump(Pro, f)

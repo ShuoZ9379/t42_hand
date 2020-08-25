@@ -56,12 +56,12 @@ class rollout():
         # while not rospy.is_shutdown():
         rospy.spin()
 
-    def run_rollout(self, A, obs_idx, obs_size=np.array([0.75]),goal_idx=np.array([8]),big_goal_radius=np.array([8])):
+    def run_rollout(self, A, obs_idx, obs_size=np.array([0.75]),goal_idx=np.array([8]),big_goal_radius=np.array([8]),sparse=np.array([0])):
         self.rollout_transition = []
 
         # Reset gripper
         while 1:
-            self.reset_srv(obs_idx[0],obs_size[0],goal_idx[0],big_goal_radius[0])
+            self.reset_srv(obs_idx[0],obs_size[0],goal_idx[0],big_goal_radius[0],sparse[0])
             while not self.gripper_closed:
                 #print('caocaocao')
                 self.rate.sleep()
@@ -141,6 +141,7 @@ class rollout():
         self.obs_size = req.obs_size
         self.goal_idx = req.goal_idx
         self.big_goal_radius = req.big_goal_radius
+        self.sparse=req.sparse
         if self.obs_idx==14:
             self.goal=self.horseshoe_goals[self.goal_idx]
             self.obs_size=0.5
@@ -151,7 +152,7 @@ class rollout():
             self.big_goal_radius=8
 
         while 1:
-            st=self.reset_srv(self.obs_idx,self.obs_size,self.goal_idx,self.big_goal_radius).states
+            st=self.reset_srv(self.obs_idx,self.obs_size,self.goal_idx,self.big_goal_radius,self.sparse).states
             while not self.gripper_closed:
                 #print('caocaocao')
                 self.rate.sleep()
@@ -182,10 +183,18 @@ class rollout():
             failed = not (suc and object_grasped and no_hit_obs)
             Done=goal_reached or failed
             Done_history.append(int(Done))
-            rwd=-np.linalg.norm(self.goal-next_state[:2])-np.square(actions_nom[i]).sum()
-            #if failed:
-            if not no_hit_obs:
-                rwd-=1e6
+            if not self.sparse:
+                rwd=-np.linalg.norm(self.goal-next_state[:2])-np.square(actions_nom[i]).sum()
+                #if failed:
+                if not no_hit_obs:
+                    rwd-=1e6
+            else:
+                rwd=-1
+                #if failed:
+                if not no_hit_obs:
+                    rwd-=2000
+                if goal_reached and (not failed):
+                    rwd=0
             rwd_history.append(rwd)
             if Done:
                 print('Episode Finished')
@@ -198,7 +207,8 @@ class rollout():
         obs_size = np.array(req.obs_size)
         goal_idx = np.array(req.goal_idx)
         big_goal_radius = np.array(req.big_goal_radius)
-        success = self.run_rollout(actions_nom,obs_idx,obs_size,goal_idx,big_goal_radius)
+        sparse = np.array(req.sparse)
+        success = self.run_rollout(actions_nom,obs_idx,obs_size,goal_idx,big_goal_radius,sparse)
 
         return {'states': self.states, 'actions_res': self.actions, 'success' : success}
 
