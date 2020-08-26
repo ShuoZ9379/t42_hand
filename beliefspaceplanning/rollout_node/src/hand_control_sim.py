@@ -246,7 +246,7 @@ class hand_control():
         if np.linalg.norm(self.obj_pos-self.goal) < self.big_goal_radius:
             print('[hand_control_sim] Goal Reached.')
             goal_reached=True
-        return {'state': self.obs_pos ,'success': suc, 'grasped': self.object_grasped, 'avoid_obs': no_hit_obs, 'goal_reach': goal_reached}
+        return {'state': np.concatenate((self.obj_pos, self.gripper_load), axis=0) ,'success': suc, 'grasped': self.object_grasped, 'avoid_obs': no_hit_obs, 'goal_reach': goal_reached}
 
 
     def CheckDropped(self, msg):

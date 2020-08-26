@@ -162,7 +162,7 @@ class rollout():
         return {'states': np.array(self.obs_srv().state)}
 
     def CallbackStepOnline(self, req):
-        S,rwd_history,Done_history=[]
+        S,rwd_history,Done_history=[],[],[]
         suc_history,object_grasped_history,no_hit_obs_history,goal_reached_history=[],[],[],[]
         actions_nom = np.array(req.actions).reshape(-1, self.action_dim)
         #actions_nom = np.clip(actions_nom,np.array([-1,-1]),np.array([1,1]))
@@ -198,7 +198,7 @@ class rollout():
                     rwd=0
             rwd_history.append(rwd)
             if Done:
-                print('Episode Finished')
+                print('[Step Online] Episode Finished')
                 break
         return {'states': next_state, 'states_history': np.array(S).reshape((-1,)), 'success': suc, 'success_history': np.array(suc_history), 'grasped': object_grasped, 'grasped_history': np.array(object_grasped_history), 'avoid_obs': no_hit_obs, 'avoid_obs_history': np.array(no_hit_obs_history), 'goal_reach': goal_reached, 'goal_reach_history': np.array(goal_reached_history), 'reward': rwd, 'reward_history': np.array(rwd_history), 'done': Done, 'done_history': np.array(Done_history)}
 

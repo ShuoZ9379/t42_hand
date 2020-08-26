@@ -64,18 +64,16 @@ for obs_idxx in [20]:
                 for Set in Sets:
                     for set_mode in set_modes:
                         lqr_ro_path='/home/' + comp + '/catkin_ws/src/beliefspaceplanning/rollout_node/set/lqr_set' + Set + ho_suf + '/'
-                        if os.path.exists(lqr_ro_path):
+                        if not os.path.exists(lqr_ro_path):
                             os.makedirs(lqr_ro_path)
                         path = '/home/' + comp + '/catkin_ws/src/beliefspaceplanning/rollout_node/set/set' + Set + ho_suf + '/'
                         #for goal_idx in [8,0,2,7,15]:
-                        for goal_idx in [8]:
+                        for goal_idx in [8,7,2,15,0]:
                             k_file = '/home/' + comp + '/catkin_ws/src/zs_sim_robot/lqr_k/'+set_mode+ho_suf+'_gazebo_ah_set'+Set[:4]+'goal'+str(goal_idx)+'_K'
                             with open(k_file,'rb') as f:
                                 K_ls=pickle.load(f)
-                            print(K_ls[0].shape)
-                            raise
-                            traj_file = glob.glob(path + set_mode +"_goal"+str(goal_idx)+ "*_traj.txt")
-                            action_file = glob.glob(path + set_mode +"_goal"+str(goal_idx)+ "*_plan.txt")
+                            traj_file = glob.glob(path + set_mode +"_goal"+str(goal_idx)+ "*_traj.txt")[0]
+                            action_file = glob.glob(path + set_mode +"_goal"+str(goal_idx)+ "*_plan.txt")[0]
                             files_pkl = glob.glob(lqr_ro_path + set_mode + "*.pkl")
 
 
@@ -111,15 +109,15 @@ for obs_idxx in [20]:
                                 T = np.loadtxt(traj_file, delimiter=',', dtype=float)
 
                             Tro,Aro = [],[]
-                            for j in range(2):
+                            for j in range(10):
                                 print("Rollout number " + str(j) + ".")
                                 tro=np.array(reset_srv(obs_idxx,obs_size,goal_idx,big_goal_radius,sparse).states).reshape(1,state_dim)
-                                aro=np.zeros((0,state_dim))
+                                aro=np.zeros((0,action_dim))
                                 for step in range(A.shape[0]):
                                     new_a=K_ls[step].dot(tro[-1,:]-T[step,:])+A[step,:]
                                     res=next_step_srv(new_a)
                                     new_t=np.array(res.states).reshape(1,state_dim)
-                                    aro = np.concatenate((aro,new_a))
+                                    aro = np.concatenate((aro,new_a.reshape((-1,action_dim))))
                                     tro = np.concatenate((tro,new_t))  
                                     if res.done:
                                         break
@@ -323,8 +321,8 @@ for obs_idxx in [20]:
                                 k_file = '/Users/zsbjltwjj/Downloads/t42_hand/zs_sim_robot/lqr_k/'+set_mode+ho_suf+'_gazebo_ah_set'+Set[:4]+'goal'+str(num)+'_K'
                                 with open(k_file,'rb') as f:
                                     K_ls=pickle.load(f)
-                                trajfile = glob.glob(path + set_mode +"_goal"+str(num)+ "*_traj.txt")
-                                #action_file = glob.glob(path + set_mode +"_goal"+str(goal_idx)+ "*_plan.txt")
+                                trajfile = glob.glob(path + set_mode +"_goal"+str(num)+ "*_traj.txt")[0]
+                                #action_file = glob.glob(path + set_mode +"_goal"+str(goal_idx)+ "*_plan.txt")[0]
                                 #action_pklfile = lqr_ro_path+action_file[len(path):-3] + 'pkl'
                                 traj_pklfile = lqr_ro_path+traj_file[len(path):-3] + 'pkl'
                                 if traj_pklfile.find(set_mode) < 0:
