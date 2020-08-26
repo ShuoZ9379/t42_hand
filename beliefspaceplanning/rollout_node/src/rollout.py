@@ -169,9 +169,10 @@ class rollout():
         for i in range(actions_nom.shape[0]):
             self.move_online_srv(actions_nom[i])
             self.rate.sleep()
-            next_state = np.array(self.obs_srv().state)
-            S.append(next_state)
+            #next_state = np.array(self.obs_srv().state)
             res=self.check_srv()
+            next_state = np.array(res.state)
+            S.append(next_state)
             suc=res.success
             suc_history.append(int(suc))
             object_grasped=res.grasped

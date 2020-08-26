@@ -1,4 +1,5 @@
 ---
+float32[] state
 bool success
 bool grasped
 bool avoid_obs
