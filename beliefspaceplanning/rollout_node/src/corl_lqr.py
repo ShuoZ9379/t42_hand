@@ -14,7 +14,7 @@ def in_hull(p,H1,H2):
         return False
 
 
-rollout = 1
+rollout = 0
 comp = 'szhang'
 state_dim = 4
 action_dim = 2
@@ -317,14 +317,15 @@ for obs_idxx in [20]:
 
                             fo  = open(results_path + 'lqr_' + set_mode + '.txt', 'wt') 
 
-                            for num in idx:
+                            for k in range(len(idx)):
+                                num=idx[k]
                                 k_file = '/Users/zsbjltwjj/Downloads/t42_hand/zs_sim_robot/lqr_k/'+set_mode+ho_suf+'_gazebo_ah_set'+Set[:4]+'goal'+str(num)+'_K'
                                 with open(k_file,'rb') as f:
                                     K_ls=pickle.load(f)
                                 trajfile = glob.glob(path + set_mode +"_goal"+str(num)+ "*_traj.txt")[0]
                                 #action_file = glob.glob(path + set_mode +"_goal"+str(goal_idx)+ "*_plan.txt")[0]
                                 #action_pklfile = lqr_ro_path+action_file[len(path):-3] + 'pkl'
-                                traj_pklfile = lqr_ro_path+traj_file[len(path):-3] + 'pkl'
+                                traj_pklfile = lqr_ro_path+trajfile[len(path):-3] + 'pkl'
                                 if traj_pklfile.find(set_mode) < 0:
                                     continue
                                 print("\nRunning pickle file: " + traj_pklfile)
@@ -514,7 +515,7 @@ for obs_idxx in [20]:
                                 for i in range(len(traj_pklfile)-1, 0, -1):
                                     if traj_pklfile[i] == '/':
                                         break
-                                fo.write('lqr_'+traj_pklfile[i+1:-4] + ': ' + str(c) + ', ' + str(p) + '\n')
+                                fo.write('lqr_'+traj_pklfile[i+1:-4] + ': '  + str(p) + '\n')
                                 plt.ylim([60, 140])
                                 plt.xlabel('x')
                                 plt.ylabel('y')
