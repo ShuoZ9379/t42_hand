@@ -5,6 +5,7 @@ from matplotlib.patches import Ellipse, Polygon
 import pickle
 import time
 import glob,os,sys
+#rosrun path/to/corl_rollout_real_red.py
 
 def check_outlier(pos,checks):
     if checks[0,:].any():
@@ -100,11 +101,15 @@ remove_end_interval=10
 filter_size=20
 
 mode_ls=['astar','policy']
+ah_with_goal_loc=1
 for mode in mode_ls:
     if mode == 'astar':
         Sets = ['_set']
     elif mode == 'policy':
-        Sets = ['_withgoalloc_set']
+        if ah_with_goal_loc:
+            Sets = ['_withgoalloc_set']
+        else:
+            Sets = ['_nogoalloc_set']
     else:
         continue
 
@@ -283,7 +288,7 @@ for mode in mode_ls:
                 
                 planner = mode
 
-                path = '/home/' + comp + '/catkin_ws/src/t42_control/rollout_t42/set/' + mode + Set + '/'
+                path = '/Users/zsbjltwjj/Downloads/t42_hand/t42_control/rollout_t42/set/' + mode + Set + '/'
 
                 fo  = open(results_path + mode + '.txt', 'wt') 
 

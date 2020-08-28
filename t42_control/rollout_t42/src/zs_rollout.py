@@ -30,7 +30,7 @@ class rolloutPublisher():
 
         self.action_pub = rospy.Publisher('/rollout/action', Float32MultiArray, queue_size = 10)
 
-        rospy.Subscriber('/rollout/fail', Bool, self.callbacFail)
+        #rospy.Subscriber('/rollout/fail', Bool, self.callbacFail)
         #rospy.Subscriber('/rollout/one_fail', Bool, self.callbacOneFail)
 
         self.rollout_actor_srv = rospy.ServiceProxy('/rollout/run_actor', SetBool)
@@ -41,7 +41,8 @@ class rolloutPublisher():
         self.close_srv = rospy.ServiceProxy('/CloseGripper', close) 
 
         rospy.Service('/rollout/ResetOnline', reset, self.CallbackResetOnline)
-        rospy.Service('/rollout/StepOnline', StepOnlinetReq, self.CallbackStepOnline)
+        #rospy.Service('/rollout/StepOnline', StepOnlinetReq, self.CallbackStepOnline)
+        rospy.Service('/rollout/StepOnlineOneStep', StepOnlinetReq, self.CallbackStepOnlineOneStep)
         self.move_online_srv=rospy.ServiceProxy('/MoveGripperOnline', TargetAngles)
         self.check_srv=rospy.ServiceProxy('/CheckStatusOnline', CheckOnlineStatus)
 
@@ -64,73 +65,6 @@ class rolloutPublisher():
         checks=states[:,-3:]
         return transformed_states.reshape(-1,),checks.reshape(-1,)
 
-
-    def run_rollout(self, A):
-        finished=False
-        while not finished:
-            self.rollout_transition = []
-            self.fail = False  
-
-            print("[rollout_action_publisher] Place object and press key...")
-            raw_input()
-            self.close_srv()
-            time.sleep(1.0)
-            print('[rollout] Verifying grasp...')
-            if self.drop_srv().dropped: # Check if really grasped
-                print('[rollout] Grasp failed. Restarting')
-                self.slow_open()
-                self.open_srv()
-                continue
-
-            msg = Float32MultiArray()  
-
-            state = np.array(self.obs_srv().state)
-            self.S = []
-            self.S.append(np.copy(state))  
-
-            print("[rollout_action_publisher] Rolling-out actions...")
-            
-            # Publish episode actions
-            self.running = True
-            success = True
-            n = 0
-            i = 0
-            while self.running:
-                if n == 0:
-                    action = A[i,:]
-                    i += 1
-                    n = self.stepSize
-                n -= 1
-                msg.data = action
-                self.action_pub.publish(msg)
-
-                if i==1 and n==self.stepSize-1:
-                    self.rollout_actor_srv(True)
-
-                print(i, action, A.shape[0])
-                next_state=np.array(self.obs_srv().state)
-                self.S.append(np.copy(next_state))
-                self.rollout_transition.append([state,action,next_state,self.fail])
-                state=np.copy(next_state)
-
-                if self.fail: # not suc or detection/drop fail:
-                    print("[rollout] Move or Detection or Drop Fail.")
-                    success = False
-                    self.rollout_actor_srv(False)
-                    break
-
-                if i == A.shape[0] and n == 0:
-                    print("[rollout] Complete.")
-                    success = True
-                    self.rollout_actor_srv(False)
-                    break
-                self.rate.sleep()
-            rospy.sleep(1.)
-            self.slow_open()
-            self.open_srv()
-            finished=True
-
-        return success
 
     def run_rollout_v2(self, A):
         finished=False
@@ -170,7 +104,7 @@ class rolloutPublisher():
                 print(i, action, A.shape[0])
 
                 if i % 4 == 1:
-                    suc=self.move_srv(self.action).success
+                    suc=self.move_srv(action).success
 
                 next_state=np.array(self.obs_srv().state)
                 self.S.append(np.copy(next_state))
@@ -209,8 +143,8 @@ class rolloutPublisher():
             self.move_srv(np.array([-6.,-6.]))
             rospy.sleep(0.1)
 
-    def callbacFail(self, msg):
-        self.fail = msg.data
+    #def callbacFail(self, msg):
+    #    self.fail = msg.data
         
     #def callbacOneFail(self, msg):
     #    self.one_fail = msg.data
@@ -235,10 +169,11 @@ class rolloutPublisher():
                 break
 
         print('[rollout] Grasp succeeded and goal already set...')
-        return {'states': np.array(self.obs_srv().state)}
+        st=self.transform_one_state(np.array(self.obs_srv().state))[0]
+        return {'states': st}
 
     def CallbackStepOnline(self, req):
-        S,rwd_history,Done_history=[]
+        S,rwd_history,Done_history=[],[],[]
         suc_history,object_grasped_history,goal_reached_history=[],[],[]
         four_S_history=[],[]
         actions_nom = np.array(req.actions).reshape(-1, self.action_dim)
@@ -248,17 +183,20 @@ class rolloutPublisher():
             four_S=[]
             for j in range(4):
                 self.rate.sleep()
-                next_state = np.array(self.obs_srv().state)
+                res=self.check_srv()
+                #next_state = np.array(self.obs_srv().state)
+                next_state = np.array(res.state)
                 four_S.append(next_state)
                 four_S_history.append(next_state)
 
-            next_state=self.transform_one_state(next_state)
+            next_state,checks=self.transform_one_state(next_state)
             S.append(next_state)
 
-            res=self.check_srv()
+            #res=self.check_srv()
             suc=res.success
             suc_history.append(int(suc))
             object_grasped=res.grasped
+            #object_grasped=any(checks)
             object_grasped_history.append(int(object_grasped))
             goal_reached=False
             if np.linalg.norm(next_state[:2]-self.goal) < self.big_goal_radius:
@@ -276,6 +214,48 @@ class rolloutPublisher():
                 break
         return {'states': next_state, 'states_history': np.array(S).reshape((-1,)), 'four_states': four_S.reshape((-1,)), 'four_states_history': four_S_history.reshape((-1,)), 'success': suc, 'success_history': np.array(suc_history), 'grasped': object_grasped, 'grasped_history': np.array(object_grasped_history), 'goal_reach': goal_reached, 'goal_reach_history': np.array(goal_reached_history), 'reward': rwd, 'reward_history': np.array(rwd_history), 'done': Done, 'done_history': np.array(Done_history)}
 
+
+    def CallbackStepOnlineOneStep(self, req):
+        S,rwd_history,Done_history=[],[],[]
+        suc_history,object_grasped_history,goal_reached_history=[],[],[]
+        four_S_history=[],[]
+        actions_nom = np.array(req.actions).reshape(-1, self.action_dim)
+        #actions_nom = np.clip(actions_nom,np.array([-1,-1]),np.array([1,1]))
+        for i in range(actions_nom.shape[0]):
+            self.move_online_srv(actions_nom[i])
+            four_S=[]
+            for j in range(1):
+                self.rate.sleep()
+                res=self.check_srv()
+                #next_state = np.array(self.obs_srv().state)
+                next_state=np.array(res.state)
+                four_S.append(next_state)
+                four_S_history.append(next_state)
+
+            next_state,checks=self.transform_one_state(next_state)
+            S.append(next_state)
+
+            #res=self.check_srv()
+            suc=res.success
+            suc_history.append(int(suc))
+            object_grasped=res.grasped
+            #object_grasped=any(checks)
+            object_grasped_history.append(int(object_grasped))
+            goal_reached=False
+            if np.linalg.norm(next_state[:2]-self.goal) < self.big_goal_radius:
+                print('[rollout] Goal Reached.')
+                goal_reached=True
+            goal_reached_history.append(int(goal_reached))
+            failed = not (suc and object_grasped)
+            Done=goal_reached or failed
+            Done_history.append(int(Done))
+            rwd=-np.linalg.norm(self.goal-next_state[:2])-np.square(actions_nom[i]).sum()
+            rwd_history.append(rwd)
+            if Done:
+                print('Episode Finished')
+                self.slow_open()
+                break
+        return {'states': next_state, 'states_history': np.array(S).reshape((-1,)), 'four_states': four_S.reshape((-1,)), 'four_states_history': four_S_history.reshape((-1,)), 'success': suc, 'success_history': np.array(suc_history), 'grasped': object_grasped, 'grasped_history': np.array(object_grasped_history), 'goal_reach': goal_reached, 'goal_reach_history': np.array(goal_reached_history), 'reward': rwd, 'reward_history': np.array(rwd_history), 'done': Done, 'done_history': np.array(Done_history)}
 
     def CallbackRollout(self, req):
         print('[rollout_action_publisher] Rollout request received.')

@@ -275,6 +275,8 @@ class hand_control():
 
 
     def CheckStatusOnline(self,msg):
+        obs = np.concatenate((self.base_rmat,self.base_tvec,self.obj_pos, self.cornerPos,self.marker0,self.marker1,self.marker2,self.marker3, self.gripper_load, np.array([float(self.no_detect)]),np.array([float(self.no_paral)]),np.array([float(self.drop_query)]))) 
+
         suc=True
         try:
             if self.gripper_pos[0] > 0.9 or self.gripper_pos[1] > 0.9 or self.gripper_pos[0] < 0.03 or self.gripper_pos[1] < 0.03:
@@ -293,10 +295,11 @@ class hand_control():
                 suc=False
 
         if self.drop_query or self.no_detect or self.no_paral:
+            rospy.logerr('[hand] Object dropped or Marker not detected or Z axes not parallel.')
             detect_and_no_drop=False
         else:
             detect_and_no_drop=True
-        return {'success': suc, 'grasped': detect_and_no_drop}
+        return {'state': obs, 'success': suc, 'grasped': detect_and_no_drop}
 
 
     def CheckDropped(self):
