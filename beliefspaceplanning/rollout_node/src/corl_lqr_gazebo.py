@@ -14,7 +14,7 @@ def in_hull(p,H1,H2):
         return False
 
 
-rollout = 1
+rollout = 0
 comp = 'szhang'
 state_dim = 4
 action_dim = 2

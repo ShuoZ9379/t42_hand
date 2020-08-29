@@ -1,0 +1,8 @@
+Goal #,Obstacle Size,policy_OBS,policy_OBS,policy_OBS,policy_OBS,policy_OBS,policy_OBS,policy_OBS,policy_OBS,policy_OBS,policy_OBS,policy_OBS,policy_OBS,policy_OBS,policy_OBS,policy_OBS,policy_OBS,policy_OBS,
+,,success rate, goal reach rate, plan path length, success path length, success path length std, failure path length, failure path length std, plan path steps, failure path steps, failure path steps std, plan path last distance to goal, success path last distance to goal, success path last distance to goal std, failure path last distance to goal, failure path last distance to goal std, success path RMSE relative to plan path, success path RMSE relative to plan path std,
+0,0.75,0.0,0.0,87.46,-,-,57.1,0.09,461.0,270.9,0.3,5.482308187495887,-,-,24.39540952908405,0.058165672895281295,-,-,
+2,0.75,100.0,100.0,61.39,72.01,0.02,-,-,184.0,-,-,5.487496979881727,4.6154984082251955,0.006290802862385701,-,-,6.44,0.01,
+7,0.75,100.0,100.0,135.61,65.52,0.13,-,-,912.0,-,-,5.478130025663357,6.566353619348119,0.03914154162431691,-,-,2.9,0.03,
+8,0.75,100.0,100.0,143.41,90.98,0.31,-,-,974.0,-,-,5.327972605212934,7.11971845424969,0.12003881884948485,-,-,4.94,0.06,
+15,0.75,100.0,0.0,184.71,123.01,0.74,-,-,1276.0,-,-,5.403968245706317,9.516442861523661,0.4191516228605898,-,-,6.01,0.11,
+Mean of all goals,0.75,80.0,60.0,122.516,87.88,0.3,57.1,0.09,761.4,270.9,0.3,5.435975208792045,6.954503335836666,0.14615569654919433,24.39540952908405,0.058165672895281295,5.0725,0.052500000000000005,

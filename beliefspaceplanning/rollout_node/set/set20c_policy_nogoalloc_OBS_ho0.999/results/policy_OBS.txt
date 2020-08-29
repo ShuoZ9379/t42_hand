@@ -1,0 +1,5 @@
+policy_OBS_seed4_goal7_run0_withOBS_numsteps_7_lr_0.05_withreachgoal_sparse_nogoalloc_obs0.75_ho0.999_plan: 100.0, 100.0
+policy_OBS_seed4_goal15_run0_withOBS_numsteps_7_lr_0.1_withreachgoal_sparse_nogoalloc_obs0.75_ho0.999_plan: 100.0, 0.0
+policy_OBS_seed0_goal0_run0_withOBS_numsteps_7_lr_0.05_withreachgoal_sparse_nogoalloc_obs0.75_ho0.999_plan: 0.0, 0.0
+policy_OBS_seed0_goal2_run0_withOBS_numsteps_7_lr_0.05_withreachgoal_sparse_nogoalloc_obs0.75_ho0.999_plan: 100.0, 100.0
+policy_OBS_seed4_goal8_run0_withOBS_numsteps_7_lr_0.1_withreachgoal_sparse_nogoalloc_obs0.75_ho0.999_plan: 100.0, 100.0
