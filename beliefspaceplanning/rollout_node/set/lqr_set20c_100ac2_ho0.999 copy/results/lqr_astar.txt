@@ -1,0 +1,5 @@
+lqr_astar_goal0_run0_m100_obs0.75_ho0.999_traj: 0.0
+lqr_astar_goal2_run0_m100_obs0.75_ho0.999_traj: 100.0
+lqr_astar_goal7_run0_m100_obs0.75_ho0.999_traj: 100.0
+lqr_astar_goal8_run0_m100_obs0.75_ho0.999_traj: 100.0
+lqr_astar_goal15_run0_m100_obs0.75_ho0.999_traj: 100.0

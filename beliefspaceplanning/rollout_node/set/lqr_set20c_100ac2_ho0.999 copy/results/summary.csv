@@ -1,0 +1,8 @@
+Goal #,Obstacle Size,lqr_astar,lqr_astar,lqr_astar,lqr_astar,lqr_astar,lqr_astar,lqr_astar,lqr_astar,lqr_astar,lqr_astar,lqr_astar,lqr_astar,
+,,goal reach rate, plan path length, lqr ro path length, lqr ro path length std, plan path steps, lqr ro path steps, lqr ro path steps std, plan path last distance to goal, lqr ro path last distance to goal, lqr ro path last distance to goal std, lqr ro path RMSE relative to plan path, lqr ro path RMSE relative to plan path std,
+0,0.75,0.0,74.31,57.41,0.04,457.0,326.0,0.0,5.499326795335975,24.438173457294127,0.011837717811957601,1.03,0.01,
+2,0.75,100.0,61.6,59.39,0.02,184.0,175.0,0.0,5.2718429080998055,7.962607941937423,0.004073909590819569,0.9,0.03,
+7,0.75,100.0,59.35,56.06,0.05,401.0,388.0,0.0,5.296264093125778,7.919913708604928,0.007626622943479068,0.55,0.02,
+8,0.75,100.0,80.44,53.6,0.04,572.0,397.2,0.4,5.495246048068314,7.9585316998260875,0.018621825984502408,1.1,0.04,
+15,0.75,100.0,106.11,79.16,0.28,766.0,501.0,0.0,5.409231768910071,7.440611201187328,0.22958199113978597,1.8,0.05,
+Mean of all goals,0.75,80.0,76.362,61.124,0.08600000000000001,476.0,357.44,0.08,5.394382322707989,11.14396760176998,0.054348413494108926,1.076,0.030000000000000006,
