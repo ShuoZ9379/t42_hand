@@ -119,7 +119,11 @@ def learn(*,
         load_path=None,
         log_interval=1,
         need_eval=False, num_eval_eps=1, compare=False,compare_ah_idx=8,reacher_sd=1,acrobot_sd=1,
-        plot_single_loss=False, single_loss_suf='', 
+        plot_single_loss=False, single_loss_suf='',
+        save_path=None,
+        ho=None,
+        lr_factor=None,
+        find_best=None,
         **network_kwargs
         ):
     '''
