@@ -33,6 +33,7 @@ class image_converter():
                 idx+=1
                 if idx==10:
                     sys.exit()
+                rate.sleep()
 
     def callbackImgConvert(self,data):
         try:
