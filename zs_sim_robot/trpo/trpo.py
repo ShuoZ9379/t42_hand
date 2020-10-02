@@ -611,11 +611,14 @@ def get_variables(scope):
     return tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope)
 
 def get_trainable_variables(scope):
+    #print (tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope))
     return tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope)
 
 def get_vf_trainable_variables(scope):
+    #print([v for v in get_trainable_variables(scope) if 'vf' in v.name[len(scope):].split('/')])
     return [v for v in get_trainable_variables(scope) if 'vf' in v.name[len(scope):].split('/')]
 
 def get_pi_trainable_variables(scope):
+    #print([v for v in get_trainable_variables(scope) if 'pi' in v.name[len(scope):].split('/')])
     return [v for v in get_trainable_variables(scope) if 'pi' in v.name[len(scope):].split('/')]
 

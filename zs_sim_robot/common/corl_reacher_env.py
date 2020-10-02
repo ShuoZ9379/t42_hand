@@ -38,6 +38,7 @@ class action_space(object):
 class corl_reacher(object):
 	def __init__(self,env_seed=0,ho=0,ctrl_rew=True,with_reach_goal_terminal=False):
 		self.env_name='corl_Reacher-v2'
+		self.suc=False
 		torch.manual_seed(env_seed)
 		self.gym_env=gym.make('Reacher-v2')
 		self.gym_env.seed(env_seed)
@@ -75,6 +76,7 @@ class corl_reacher(object):
 		self.goal_radius=0.6875*big_goal_radius
 		self.num_steps=0
 		self.cur_state=self.init_state
+		self.suc=False
 		return self.cur_state
 
 	def compare_reset(self,goal_loc,cur_state):
@@ -111,6 +113,7 @@ class corl_reacher(object):
 		if self.num_steps>=self.horizon:
 			done=True
 		elif self.with_reach_goal_terminal and np.linalg.norm(self.goal_loc-self.cur_state[6:8])<=self.goal_radius:
+			self.suc=True
 			done=True
 		else:
 			done=False

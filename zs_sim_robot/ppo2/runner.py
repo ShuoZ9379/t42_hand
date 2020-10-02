@@ -20,7 +20,7 @@ class Runner(AbstractEnvRunner):
         # Possibly arguments for reset() (Deprecated!!!)
         self.kwargs=kwargs
 
-    def run(self,do_eval=False,num_eval_eps=1,compare=False,compare_ah_idx=8,reacher_sd=1,acrobot_sd=1,eval_steps=2048):
+    def run(self,env_type,do_eval=False,num_eval_eps=1,compare=False,compare_ah_idx=8,reacher_sd=1,acrobot_sd=1,eval_steps=2048):
         #compare_ah_idx : [0,2,7,8,15];  reacher_sd : [1,2,5]
         # Here, we init the lists that will contain the mb of experiences
         mb_obs, mb_rewards, mb_actions, mb_values, mb_dones, mb_neglogpacs = [],[],[],[],[],[]
@@ -55,11 +55,12 @@ class Runner(AbstractEnvRunner):
                     maybeepinfo = info.get('episode')
                     if maybeepinfo: 
                         epinfos.append(maybeepinfo)
-                        if self.env.suc:
-                            succ=True
-                            if maybeepinfo["r"]>=best_eps_ret:
-                                best_eps_ret=maybeepinfo["r"]
-                                best_eps_len=maybeepinfo["l"]
+                        if env_type=='corl':
+                            if self.env.suc:
+                                succ=True
+                                if maybeepinfo["r"]>=best_eps_ret:
+                                    best_eps_ret=maybeepinfo["r"]
+                                    best_eps_len=maybeepinfo["l"]
                         if no_dummy:
                             self.obs[:] = self.env.reset(**self.kwargs)
                 mb_rewards.append(rewards)
@@ -191,12 +192,13 @@ class Runner(AbstractEnvRunner):
             delta = mb_rewards[t] + self.gamma * nextvalues * nextnonterminal - mb_values[t]
             mb_advs[t] = lastgaelam = delta + self.gamma * self.lam * nextnonterminal * lastgaelam
         mb_returns = mb_advs + mb_values
-        if self.env.env_name=='real_ah' and do_eval:
-            return (*map(sf01, (mb_obs, mb_returns, mb_dones, mb_actions, mb_values, mb_neglogpacs)),
-                mb_states, epinfos, mb_final_obs,mb_four_obs,succ,best_eps_ret,best_eps_len)
-        else:
-            return (*map(sf01, (mb_obs, mb_returns, mb_dones, mb_actions, mb_values, mb_neglogpacs)),
-                mb_states, epinfos, mb_final_obs,succ,best_eps_ret,best_eps_len)
+        if env_type=='corl':
+            if self.env.env_name=='real_ah' and do_eval:
+                return (*map(sf01, (mb_obs, mb_returns, mb_dones, mb_actions, mb_values, mb_neglogpacs)),
+                    mb_states, epinfos, mb_final_obs,mb_four_obs,succ,best_eps_ret,best_eps_len)
+        
+        return (*map(sf01, (mb_obs, mb_returns, mb_dones, mb_actions, mb_values, mb_neglogpacs)),
+            mb_states, epinfos, mb_final_obs,succ,best_eps_ret,best_eps_len)
 
 def sf01(arr):
     """

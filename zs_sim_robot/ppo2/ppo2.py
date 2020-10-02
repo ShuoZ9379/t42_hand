@@ -165,9 +165,9 @@ def learn(*, network, env, env_type, total_timesteps, save_path, eval_env = None
             if update % log_interval == 0 and is_mpi_root: logger.info('Stepping environment...')
 
             # Get minibatch
-            obs, returns, masks, actions, values, neglogpacs, states, epinfos, final_obs, succ, best_eps_ret, best_eps_len = runner.run() #pylint: disable=E0632
+            obs, returns, masks, actions, values, neglogpacs, states, epinfos, final_obs, succ, best_eps_ret, best_eps_len = runner.run(env_type) #pylint: disable=E0632
             if eval_env is not None:
-                eval_obs, eval_returns, eval_masks, eval_actions, eval_values, eval_neglogpacs, eval_states, eval_epinfos, eval_final_obs, eval_succ, eval_best_eps_ret, eval_best_eps_len= eval_runner.run() #pylint: disable=E0632
+                eval_obs, eval_returns, eval_masks, eval_actions, eval_values, eval_neglogpacs, eval_states, eval_epinfos, eval_final_obs, eval_succ, eval_best_eps_ret, eval_best_eps_len= eval_runner.run(env_type) #pylint: disable=E0632
             
             if update % log_interval == 0 and is_mpi_root: logger.info('Done.')
 
@@ -314,7 +314,7 @@ def learn(*, network, env, env_type, total_timesteps, save_path, eval_env = None
             lrnow = lr(1.0)
             cliprangenow = cliprange(1.0)
             logger.info('Evaluation: Stepping environment...')
-            obs, returns, masks, actions, values, neglogpacs, states, epinfos, final_obs, succ, best_eps_ret, best_eps_len = runner.run(do_eval=True,num_eval_eps=num_eval_eps,compare=compare,compare_ah_idx=compare_ah_idx,reacher_sd=reacher_sd,acrobot_sd=acrobot_sd) #pylint: disable=E0632
+            obs, returns, masks, actions, values, neglogpacs, states, epinfos, final_obs, succ, best_eps_ret, best_eps_len = runner.run(env_type,do_eval=True,num_eval_eps=num_eval_eps,compare=compare,compare_ah_idx=compare_ah_idx,reacher_sd=reacher_sd,acrobot_sd=acrobot_sd) #pylint: disable=E0632
             logger.info('Evaluation: Done.')
             do_eval_epinfobuf=deque(maxlen=100)
             do_eval_epinfobuf.extend(epinfos)
