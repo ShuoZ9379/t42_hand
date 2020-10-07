@@ -1,13 +1,16 @@
-process.py:
+process.py (no medfilter):
 GOOD suffix '': remove a) b)
 TOO LONG suffix v1_: remove a) b) c) d) e)
 GOOD suffix v1.6_: remove a) b) d) e)
 NOT EVAL suffix v1.7_: remove a) b) d)
 NOT TRAIN suffix v1.8_: remove a) b) e)
 
-smooth_process.py:(args: [..., filter_size, not recali, include init state,  not remove d), interval, not remove e), length_e, not remove b), not remove c)(, train_mode, suffix)])
+smooth_process.py(with medfilter):(args: [..., filter_size, not recali, include init state,  not remove d), interval, not remove e), length_e, not remove b), not remove c)(, train_mode, suffix)])
+
 suffix '' or suffix 'v0.0_': ..., 40, not recali, include, remove d), 10, remove e), 100, remove b), not remove c)
+
 suffix 'v0.1_': ..., 20, not recali, include, remove d), 10, remove e), 100, remove b), not remove c)
+
 suffix 'v0.2_': ..., 40, not recali, include, remove d), 10, remove e), 100, remove b), remove c)
 suffix 'v0.3_': ..., 20, not recali, include, remove d), 10, remove e), 100, remove b), remove c)
 

@@ -89,6 +89,7 @@ class collect_data():
                         self.trigger = False
                         print('[collect_data] Grasp failed. Restarting')
                         self.slow_open()
+                        open_srv()
                         continue
 
                     print('[collect_data] Starting episode %d...' % self.num_episodes)
