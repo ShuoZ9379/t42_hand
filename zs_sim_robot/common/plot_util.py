@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import os.path as osp
 import json
-import os
+import os,copy
 import numpy as np
 import pandas
 from collections import defaultdict, namedtuple
@@ -242,6 +242,7 @@ def plot_results(
     xy_fn=default_xy_fn,
     split_fn=default_split_fn,
     group_fn=default_split_fn,
+    env=None,
     average_group=False,
     shaded_std=True,
     shaded_err=True,
@@ -381,15 +382,29 @@ def plot_results(
                 if shaded_std:
                     ax.fill_between(usex, ymean - ystd,    ymean + ystd,    color=color, alpha=.2)
 
-
+        
         # https://matplotlib.org/users/legend_guide.html
         plt.tight_layout()
+        if env=='Reacher-v2':
+            opt,=plt.plot(-4.9*np.ones(500000),':',label='optimal')
         if any(g2l.keys()):
-            ax.legend(
-                g2l.values(),
-                ['%s (%i)'%(g, g2c[g]) for g in g2l] if average_group else g2l.keys(),
-                loc=2 if legend_outside else None,
-                bbox_to_anchor=(1,1) if legend_outside else None)
+            if env=='Reacher-v2':
+                kys=copy.copy(g2l)
+                kys.update({'optimal':opt})
+                names=['%s (%i)'%(g, g2c[g]) for g in g2l] if average_group else g2l.keys()
+                names=names+['optimal']
+                ax.legend(
+                    kys.values(),
+                    names,
+                    loc=2 if legend_outside else None,
+                    bbox_to_anchor=(1,1) if legend_outside else None)
+            else:
+                ax.legend(
+                    g2l.values(),
+                    ['%s (%i)'%(g, g2c[g]) for g in g2l] if average_group else g2l.keys(),
+                    loc=2 if legend_outside else None,
+                    bbox_to_anchor=(1,1) if legend_outside else None)
+        
         ax.set_title(sk)
         # add xlabels, but only to the bottom row
         if xlabel is not None:
@@ -401,8 +416,7 @@ def plot_results(
             for ax in axarr[:,0]:
                 plt.sca(ax)
                 plt.ylabel(ylabel)
-
-    return f, axarr
+    return f, axarr, g2l
 
 def regression_analysis(df):
     xcols = list(df.columns.copy())

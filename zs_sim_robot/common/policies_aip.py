@@ -44,7 +44,7 @@ class PolicyWithValue(object):
     Encapsulates fields and methods for RL policy and value function estimation with shared parameters
     """
 
-    def __init__(self, ref_type, policy_ref, r_diff_model, alpha_func, env, env_type,env_id, observations, reference_actions,trust_values,latent, estimate_q=False, vf_latent=None, sess=None, **tensors):
+    def __init__(self, ablation, ref_type, policy_ref, r_diff_model, alpha_func, env, env_type,env_id, observations, reference_actions,trust_values,latent, estimate_q=False, vf_latent=None, sess=None, **tensors):
         """
         Parameters:
         ----------
@@ -71,6 +71,9 @@ class PolicyWithValue(object):
         self.ALPHA=trust_values
         self.policy_ref=policy_ref
         self.r_diff_model=r_diff_model
+        self.ablation=ablation
+        #print(self.ablation)
+        #raise
         self.ref_type=ref_type
         self.alpha_func=alpha_func
         self.env_name=env_id
@@ -125,14 +128,18 @@ class PolicyWithValue(object):
             action_ref=get_ppo_action_ref(observation,self.policy_ref,env_name=self.env_name)
         else:
             raise NotImplementedError
-        if not self.r_diff_model.started:
-            alpha=np.array([[1.0]])
-        else:
-            r_diff=self.r_diff_model.predict(observation,action_ref)
-            if self.alpha_func=='squared':
-                alpha=1-r_diff**2
+        if self.ablation=='auto':
+            if not self.r_diff_model.started:
+                alpha=np.array([[1.0]])
             else:
-                raise NotImplementedError
+                r_diff=self.r_diff_model.predict(observation,action_ref)
+                if self.alpha_func=='squared':
+                    alpha=1-np.sqrt(r_diff)
+                    #print(alpha)
+                else:
+                    raise NotImplementedError
+        else:
+            alpha=np.array([[float(self.ablation)]])
         
         if stochastic:
             a, v, state, neglogp = self._evaluate([self.action_sto, self.vf, self.state, self.neglogp_sto], observation,action_ref, alpha, **extra_feed)
@@ -171,7 +178,7 @@ def build_policy(env, policy_network, value_network=None,  normalize_observation
         network_type = policy_network
         policy_network = get_network_builder(network_type)(**policy_kwargs)
 
-    def policy_fn(env_type,env_id,ref_type,policy_ref,r_diff_model,alpha_func,nbatch=None, sess=None, observ_placeholder=None,ac_placeholder=None,alpha_placeholder=None):
+    def policy_fn(ablation,env_type,env_id,ref_type,policy_ref,r_diff_model,alpha_func,nbatch=None, sess=None, observ_placeholder=None,ac_placeholder=None,alpha_placeholder=None):
         ob_space = env.observation_space
         env_space = env.action_space
 
@@ -209,6 +216,7 @@ def build_policy(env, policy_network, value_network=None,  normalize_observation
                 vf_latent = _v_net(encoded_x)
 
         policy = PolicyWithValue(
+            ablation=ablation,
             ref_type=ref_type,
             policy_ref=policy_ref,
             r_diff_model=r_diff_model,

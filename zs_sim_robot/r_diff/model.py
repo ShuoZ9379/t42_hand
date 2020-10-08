@@ -20,6 +20,7 @@ class NN(object):
        
     def _make_pred(self, phi, num_output):
         pred = tf.contrib.layers.fully_connected(phi, num_outputs=num_output, activation_fn=tf.identity)
+        pred = tf.nn.sigmoid(pred)
         return pred
 
     def train(self, inputs, targets):

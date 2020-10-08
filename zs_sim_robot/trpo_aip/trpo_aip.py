@@ -146,6 +146,7 @@ def learn(*,
 
         ref_type='ppo',
         alpha_func='squared',
+        ablation='auto',
 
         #For r_diff
         r_diff_train_freq=5,
@@ -241,9 +242,9 @@ def learn(*,
     ref_ac = observation_placeholder(ac_space,name='Ref_ac')
     alpha_holder=tf.placeholder(shape=(None,1), dtype=np.float32, name='Alpha')
     with tf.variable_scope("pi_aip"):
-        pi = policy(env_type=env_type,env_id=env_id,ref_type=ref_type,policy_ref=policy_ref,r_diff_model=r_diff_model,alpha_func=alpha_func,observ_placeholder=ob,ac_placeholder=ref_ac,alpha_placeholder=alpha_holder)
+        pi = policy(ablation=str(ablation),env_type=env_type,env_id=env_id,ref_type=ref_type,policy_ref=policy_ref,r_diff_model=r_diff_model,alpha_func=alpha_func,observ_placeholder=ob,ac_placeholder=ref_ac,alpha_placeholder=alpha_holder)
     with tf.variable_scope("oldpi_aip"):
-        oldpi = policy(env_type=env_type,env_id=env_id,ref_type=ref_type,policy_ref=policy_ref,r_diff_model=r_diff_model,alpha_func=alpha_func,observ_placeholder=ob,ac_placeholder=ref_ac,alpha_placeholder=alpha_holder)
+        oldpi = policy(ablation=str(ablation),env_type=env_type,env_id=env_id,ref_type=ref_type,policy_ref=policy_ref,r_diff_model=r_diff_model,alpha_func=alpha_func,observ_placeholder=ob,ac_placeholder=ref_ac,alpha_placeholder=alpha_holder)
 
 
     val_dataset = {'ob': None, 'ac': None, 'r_diff_label': None}
@@ -451,9 +452,12 @@ def learn(*,
                     state_delta = state_delta.detach().numpy()
                     state_delta = denormalize(state_delta,y_std_arr,y_mean_arr)
                     next_state = sa[:,:8] + state_delta
-        
-                    dm_imrwd=-np.linalg.norm(goal_loc-next_state[:,6:8])-np.square(ac).sum()
+                    
+                    dm_imrwd=-np.linalg.norm(goal_loc-next_state[:,6:8],axis=1)-np.sum(np.square(ac),axis=1)
                     r_diff_label=np.clip((dm_imrwd-imrwd)/np.abs(dm_imrwd),0,1)
+                    #r_diff_label=np.clip(100*(dm_imrwd-imrwd),0,1)
+                    #print(r_diff_label)
+
                     r_diff_model.add_data_batch(ob, ac, r_diff_label)
                     if (iters_so_far+1) % r_diff_train_freq==0:
                         r_diff_model.update_forward_dynamic(require_update=True, 
