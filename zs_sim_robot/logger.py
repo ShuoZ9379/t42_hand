@@ -107,7 +107,8 @@ class CSVOutputFormat(KVWriter):
 
     def writekvs(self, kvs):
         # Add our current row to the history
-        extra_keys = list(kvs.keys() - self.keys)
+        #extra_keys = list(kvs.keys() - self.keys)
+        extra_keys = list(set(kvs.keys()) - set(self.keys))
         extra_keys.sort()
         if extra_keys:
             self.keys.extend(extra_keys)
@@ -141,7 +142,8 @@ class TensorBoardOutputFormat(KVWriter):
     Dumps key/value pairs into TensorBoard's numeric format.
     """
     def __init__(self, dir):
-        os.makedirs(dir, exist_ok=True)
+        if not os.path.exists(dir):
+            os.makedirs(dir)
         self.dir = dir
         self.step = 1
         prefix = 'events'
@@ -172,7 +174,8 @@ class TensorBoardOutputFormat(KVWriter):
             self.writer = None
 
 def make_output_format(format, ev_dir, log_suffix=''):
-    os.makedirs(ev_dir, exist_ok=True)
+    if not os.path.exists(ev_dir):
+        os.makedirs(ev_dir)
     if format == 'stdout':
         return HumanOutputFormat(sys.stdout)
     elif format == 'log':
@@ -221,11 +224,12 @@ def getkvs():
     return get_current().name2val
 
 
-def log(*args, level=INFO):
+#def log(*args, level=INFO): #python3
+def log(*args):
     """
     Write the sequence of args, with no separators, to the console and output files (if you've configured an output file).
     """
-    get_current().log(*args, level=level)
+    get_current().log(*args)
 
 def debug(*args):
     log(*args, level=DEBUG)
@@ -334,8 +338,10 @@ class Logger(object):
         self.name2cnt.clear()
         return out
 
-    def log(self, *args, level=INFO):
-        if self.level <= level:
+    #def log(self, *args, level=INFO): #python3 
+    def log(self,*args):
+        #if self.level <= level:
+        if self.level<=INFO:
             self._do_log(args)
 
     # Configuration
@@ -380,7 +386,9 @@ def configure(dir=None, format_strs=None, comm=None, log_suffix=''):
             datetime.datetime.now().strftime("openai-%Y-%m-%d-%H-%M-%S-%f"))
     assert isinstance(dir, str)
     dir = os.path.expanduser(dir)
-    os.makedirs(os.path.expanduser(dir), exist_ok=True)
+    if not os.path.exists(os.path.expanduser(dir)):
+        os.makedirs(os.path.expanduser(dir))
+    #os.makedirs(os.path.expanduser(dir), exist_ok=True)
 
     rank = get_rank_without_mpi_import()
     if rank > 0:

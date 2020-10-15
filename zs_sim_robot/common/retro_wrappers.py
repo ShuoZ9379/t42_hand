@@ -199,7 +199,8 @@ class StartDoingRandomActionsWrapper(gym.Wrapper):
                 self.some_random_steps()
         return self.last_obs, rew, done, info
 
-def make_retro(*, game, state=None, max_episode_steps=4500, **kwargs):
+#def make_retro(*, game, state=None, max_episode_steps=4500, **kwargs):
+def make_retro( game, state=None, max_episode_steps=4500, **kwargs):
     import retro
     if state is None:
         state = retro.State.DEFAULT

@@ -25,7 +25,7 @@ def reacher_adjust_obs(obs):
     else:
         return np.concatenate((obs[:,:4],obs[:,6:8],obs[:,8:10]+obs[:,4:6],obs[:,4:6]),axis=1)
 
-def get_ppo_action_ref(obs,policy_ref,env_name='Reacher-v2'):
+def get_ppo_action_ref(obs,policy_ref,env_name='Reacher-v2',ref_stochastic=True):
     if env_name=='Reacher-v2':
         adjusted_obs=reacher_adjust_obs(obs)
         if len(adjusted_obs.shape)==1:
@@ -33,7 +33,10 @@ def get_ppo_action_ref(obs,policy_ref,env_name='Reacher-v2'):
         actions, values, _, neglogpacs=policy_ref.step(adjusted_obs[0,:])
         actions_ref=actions.reshape((1,-1))
         for i in range(1,adjusted_obs.shape[0]):
-            actions, values, _, neglogpacs=policy_ref.step(adjusted_obs[i,:])
+            if not stochastic:
+                actions, values, _, neglogpacs = policy_ref._evaluate([self.pd.mode(), self.vf, self.state, self.neglogp], adjusted_obs[i,:])
+            else:
+                actions, values, _, neglogpacs = policy_ref.step(adjusted_obs[i,:])
             actions_ref=np.concatenate((actions_ref,actions),axis=0)
     else:
         raise NotImplementedError
@@ -122,10 +125,10 @@ class PolicyWithValue(object):
     def update_r_diff_model(self,r_diff_model):
         self.r_diff_model=r_diff_model
 
-    def step(self, observation, stochastic,**extra_feed):
+    def step(self, observation, stochastic,ref_stochastic,**extra_feed):
         
         if self.ref_type=='ppo':
-            action_ref=get_ppo_action_ref(observation,self.policy_ref,env_name=self.env_name)
+            action_ref=get_ppo_action_ref(observation,self.policy_ref,env_name=self.env_name,ref_stochastic=ref_stochastic)
         else:
             raise NotImplementedError
         if self.ablation=='auto':

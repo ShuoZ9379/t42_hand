@@ -1,3 +1,5 @@
+import sys
+sys.stdout.flush()
 from common.math_util import explained_variance
 from common.misc_util import zipsame
 from common import dataset
@@ -40,7 +42,7 @@ def normalize(data,x_std_arr,x_mean_arr):
 def denormalize(data,y_std_arr,y_mean_arr):
     return data * y_std_arr[:data.shape[-1]] + y_mean_arr[:data.shape[-1]]
 
-def traj_segment_generator(pi, env, horizon, stochastic):
+def traj_segment_generator(pi, env, horizon, stochastic,ref_stochastic=False):
     # Initialize state variables
     t = 0
     ac = env.action_space.sample()
@@ -66,7 +68,7 @@ def traj_segment_generator(pi, env, horizon, stochastic):
 
     while True:
         prevac = ac
-        ac, vpred, _, _, ac_ref, alpha = pi.step(ob,stochastic=stochastic)
+        ac, vpred, _, _, ac_ref, alpha = pi.step(ob,stochastic=stochastic,ref_stochastic=ref_stochastic)
         # Slight weirdness here because we need value function at time T
         # before returning segment [0, T-1] so we get the correct
         # terminal value
@@ -74,7 +76,8 @@ def traj_segment_generator(pi, env, horizon, stochastic):
             yield {"ob" : obs, "ac_ref": ac_refs, "alpha": alphas, "rew" : rews, "vpred" : vpreds, "new" : news,
                     "ac" : acs, "prevac" : prevacs, "nextvpred": vpred * (1 - new),
                     "ep_rets" : ep_rets, "ep_lens" : ep_lens, "final_obs": np.array(final_obs)}
-            _, vpred, _, _, ac_ref, alpha = pi.step(ob, stochastic=stochastic)
+            _, vpred, _, _, _, _ = pi.step(ob, stochastic=stochastic,ref_stochastic=ref_stochastic)
+            #_, vpred, _, _, ac_ref, alpha = pi.step(ob, stochastic=stochastic,ref_stochastic=ref_stochastic)
             # Be careful!!! if you change the downstream algorithm to aggregate
             # several of these batches, then be sure to do a deepcopy
             ep_rets = []
@@ -147,6 +150,8 @@ def learn(*,
         ref_type='ppo',
         alpha_func='squared',
         ablation='auto',
+        accurate=False,
+        ref_stochastic=False,
 
         #For r_diff
         r_diff_train_freq=5,
@@ -334,7 +339,7 @@ def learn(*,
 
     # Prepare for rollouts
     # ----------------------------------------
-    seg_gen = traj_segment_generator(pi, env, timesteps_per_batch, stochastic=True)
+    seg_gen = traj_segment_generator(pi, env, timesteps_per_batch, stochastic=True,ref_stochastic=ref_stochastic)
 
     episodes_so_far = 0
     timesteps_so_far = 0
@@ -362,7 +367,12 @@ def learn(*,
             logger.log("********** Iteration %i ************"%iters_so_far)
 
             with timed("sampling"):
-                seg = seg_gen.__next__()
+                if sys.version[0]=='3':
+                    seg = seg_gen.__next__()
+                elif sys.version[0]=='2':
+                    seg = seg_gen.next()
+                else:
+                    raise NotImplementedError
             add_vtarg_and_adv(seg, gamma, lam)
             
             # ob, ac, atarg, ret, td1ret = map(np.concatenate, (obs, acs, atargs, rets, td1rets))
@@ -454,7 +464,11 @@ def learn(*,
                     next_state = sa[:,:8] + state_delta
                     
                     dm_imrwd=-np.linalg.norm(goal_loc-next_state[:,6:8],axis=1)-np.sum(np.square(ac),axis=1)
-                    r_diff_label=np.clip((dm_imrwd-imrwd)/np.abs(dm_imrwd),0,1)
+                    if accurate:
+                        r_diff_label=np.clip(np.abs((dm_imrwd-imrwd)/np.abs(dm_imrwd)),a_min=None, a_max=1)
+                    else:
+                        r_diff_label=np.clip((dm_imrwd-imrwd)/np.abs(dm_imrwd),0,1)
+
                     #r_diff_label=np.clip(100*(dm_imrwd-imrwd),0,1)
                     #print(r_diff_label)
 

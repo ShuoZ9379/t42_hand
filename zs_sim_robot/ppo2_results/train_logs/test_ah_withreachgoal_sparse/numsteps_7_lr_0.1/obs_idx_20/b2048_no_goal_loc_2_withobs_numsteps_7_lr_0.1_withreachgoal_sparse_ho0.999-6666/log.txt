@@ -1,0 +1,2 @@
+Logging to ./ppo2_results/train_logs/test_ah_withreachgoal_sparse/numsteps_7_lr_0.1/obs_idx_20/b2048_no_goal_loc_2_withobs_numsteps_7_lr_0.1_withreachgoal_sparse_ho0.999-6666/
+********** Iteration 0 ************

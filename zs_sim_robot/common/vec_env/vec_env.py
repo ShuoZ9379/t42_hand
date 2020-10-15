@@ -1,6 +1,7 @@
 import contextlib
 import os
-from abc import ABC, abstractmethod
+#from abc import ABC, abstractmethod #python3
+from abc import ABCMeta, abstractmethod #python2
 
 from common.tile_images import tile_images
 
@@ -26,7 +27,10 @@ class NotSteppingError(Exception):
         Exception.__init__(self, msg)
 
 
-class VecEnv(ABC):
+#class VecEnv(ABC): #python3
+class VecEnv():
+    __metaclass__ = ABCMeta 
+
     """
     An abstract asynchronous, vectorized environment.
     Used to batch data from multiple copies of an environment, so that

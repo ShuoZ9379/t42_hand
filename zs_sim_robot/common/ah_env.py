@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import pickle
 from scipy.spatial import Delaunay
+import sys
 
 def normalize(data,x_std_arr,x_mean_arr):
 	return (data - x_mean_arr[:data.shape[-1]]) / x_std_arr[:data.shape[-1]]
@@ -294,7 +295,12 @@ class ah_env_withobs(object):
 		self.obs_idx=obs_idx
 		self.obs_filename='./obs_'+str(obs_idx)+'.pkl'
 		with open(self.obs_filename, 'rb') as f: 
-			self.Obs = pickle.load(f,encoding='latin')[:,:2]
+			if sys.version[0]=='3':
+				self.Obs = pickle.load(f,encoding='latin')[:,:2]
+			elif sys.version[0]=='2':
+				self.Obs = pickle.load(f)[:,:2]
+			else:
+				raise NotImplementedError
 		if self.obs_idx==14:
 			obs_dist=0.5
 		else:

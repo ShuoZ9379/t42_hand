@@ -1,3 +1,5 @@
+import sys
+sys.stdout.flush()
 from common.math_util import explained_variance
 from common.misc_util import zipsame
 from common import dataset
@@ -99,7 +101,8 @@ def add_vtarg_and_adv(seg, gamma, lam):
         gaelam[t] = lastgaelam = delta + gamma * lam * nonterminal * lastgaelam
     seg["tdlamret"] = seg["adv"] + seg["vpred"]
 
-def learn(*,
+#def learn(*,
+def learn(
         network,
         env,
         env_type,
@@ -284,7 +287,7 @@ def learn(*,
 
     set_from_flat(th_init)
     vfadam.sync()
-    print("Init param sum", th_init.sum(), flush=True)
+    print("Init param sum", th_init.sum())
 
     # Prepare for rollouts
     # ----------------------------------------
@@ -316,7 +319,12 @@ def learn(*,
             logger.log("********** Iteration %i ************"%iters_so_far)
 
             with timed("sampling"):
-                seg = seg_gen.__next__()
+                if sys.version[0]=='3':
+                    seg = seg_gen.__next__()
+                elif sys.version[0]=='2':
+                    seg = seg_gen.next()
+                else:
+                    raise NotImplementedError
             add_vtarg_and_adv(seg, gamma, lam)
 
             # ob, ac, atarg, ret, td1ret = map(np.concatenate, (obs, acs, atargs, rets, td1rets))
@@ -334,7 +342,8 @@ def learn(*,
 
             assign_old_eq_new() # set old parameter values to new parameter values
             with timed("computegrad"):
-                *lossbefore, g = compute_lossandgrad(*args)
+                optimgain_bef, meankl_bef, entbonus_bef, surrgain_bef, meanent_bef, g = compute_lossandgrad(*args)
+            lossbefore=[optimgain_bef, meankl_bef, entbonus_bef, surrgain_bef, meanent_bef]
             lossbefore = allmean(np.array(lossbefore))
             g = allmean(g)
             if np.allclose(g, 0):
@@ -354,7 +363,7 @@ def learn(*,
                 for _ in range(10):
                     thnew = thbefore + fullstep * stepsize
                     set_from_flat(thnew)
-                    meanlosses = surr, kl, *_ = allmean(np.array(compute_losses(*args)))
+                    meanlosses = surr, kl, entb,surb,meanentb = allmean(np.array(compute_losses(*args)))
                     improve = surr - surrbefore
                     logger.log("Expected: %.3f Actual: %.3f"%(expectedimprove, improve))
                     if not np.isfinite(meanlosses).all():
@@ -414,7 +423,8 @@ def learn(*,
                 eprewmean_ls.append(np.mean(rewbuffer))
                 if env.env_name=='ah' and logger.get_dir():
                     checkdir = osp.join(logger.get_dir(), 'checkpoints')
-                    os.makedirs(checkdir, exist_ok=True)
+                    if not os.path.exists(checkdir):
+                        os.makedirs(checkdir)
                     savepath = osp.join(checkdir, '%.5i'%iters_so_far)
                     pi.save(savepath)
 
@@ -443,6 +453,8 @@ def learn(*,
                 suf=''
             suf+=single_loss_suf
             #plt.savefig('./trpo_results/single_loss/'+env.env_name+'_single_seed_'+str(seed)+suf+'_loss.png')
+            if not os.path.exists('./trpo_results/test_ah_single_loss'+single_loss_suf+'/'):
+                os.makedirs('./trpo_results/test_ah_single_loss'+single_loss_suf+'/')
             plt.savefig('./trpo_results/test_ah_single_loss'+single_loss_suf+'/'+env.env_name+'_single_seed_'+str(seed)+suf+'_loss.png')
 
         if env_type=='corl':
@@ -462,7 +474,12 @@ def learn(*,
             logger.log("********** Evaluation %i ************"%eval_eps+1)
 
             with timed("sampling"):
-                seg = seg_gen.__next__()
+                if sys.version[0]=='3':
+                    seg = seg_gen.__next__()
+                elif sys.version[0]=='2':
+                    seg = seg_gen.next()
+                else:
+                    raise NotImplementedError
             add_vtarg_and_adv(seg, gamma, lam)
 
             # ob, ac, atarg, ret, td1ret = map(np.concatenate, (obs, acs, atargs, rets, td1rets))
@@ -477,7 +494,7 @@ def learn(*,
 
             assign_old_eq_new() # set old parameter values to new parameter values
 
-            meanlosses = surr, kl, *_ = allmean(np.array(compute_losses(*args)))
+            meanlosses = surr, kl,  entb,surb,meanentb = allmean(np.array(compute_losses(*args)))
 
             for (lossname, lossval) in zip(loss_names, meanlosses):
                 logger.record_tabular(lossname, lossval)
