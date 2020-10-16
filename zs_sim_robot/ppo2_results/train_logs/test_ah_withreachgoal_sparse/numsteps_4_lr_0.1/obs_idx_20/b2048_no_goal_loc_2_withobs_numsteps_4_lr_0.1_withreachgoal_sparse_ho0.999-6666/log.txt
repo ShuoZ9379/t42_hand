@@ -1,0 +1,21 @@
+Logging to ./ppo2_results/train_logs/test_ah_withreachgoal_sparse/numsteps_4_lr_0.1/obs_idx_20/b2048_no_goal_loc_2_withobs_numsteps_4_lr_0.1_withreachgoal_sparse_ho0.999-6666/
+********** Iteration 0 ************
+Expected: 0.013 Actual: 0.013
+violated KL constraint. shrinking step.
+Expected: 0.013 Actual: 0.007
+Stepsize OK!
+--------------------------------
+| entloss         | 0          |
+| entropy         | 2.814      |
+| EpisodesSoFar   | 1          |
+| EpLenMean       | 497        |
+| EpRewMean       | -2497      |
+| EpThisIter      | 1          |
+| ev_tdlam_before | -0.0001385 |
+| meankl          | 0.009236   |
+| optimgain       | 0.006772   |
+| surrgain        | 0.006772   |
+| TimeElapsed     | 1.942      |
+| TimestepsSoFar  | 497        |
+--------------------------------
+********** Iteration 1 ************
