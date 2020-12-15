@@ -61,7 +61,6 @@ class corl_reacher(object):
 			self.norm_path='./trans_model_data/Reacher-v2_normalization/normalization_arr'
 		else:
 			self.norm_path='./trans_model_data/Reacher-v2_normalization/normalization_arr_ho'+str(ho)
-		
 		with open(self.reacher_model_path, 'rb') as pickle_file:
 			self.reacher_model = torch.load(pickle_file, map_location='cpu')
 		with open(self.norm_path, 'rb') as pickle_file:

@@ -1,5 +1,5 @@
 import sys
-sys.stdout.flush()
+#sys.stdout.flush()
 import re
 import multiprocessing
 import os.path as osp
@@ -109,7 +109,6 @@ def build_env(args):
         get_session(config=config)
         flatten_dict_observations = alg not in {'her'}
         env = make_vec_env(env_id, env_type, args.horizon, args.with_obs, args.with_obs_end, args.obs_idx, args.obs_pen, args.sparse, args.ah_with_goal_loc, args.ah_goal_loc_idx, args.ah_with_reach_goal, args.ctrl_rwd, args.final_rwd, args.ctrl_rwd_coef, args.ho, args.goal_height, args.num_env or 1, seed, reward_scale=args.reward_scale, flatten_dict_observations=flatten_dict_observations)
-
         #if env_type == 'mujoco':
         #    env = VecNormalize(env, use_tf=True)
     return env

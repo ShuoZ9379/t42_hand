@@ -1,5 +1,5 @@
 import sys
-sys.stdout.flush()
+#sys.stdout.flush()
 from common.math_util import explained_variance
 from common.misc_util import zipsame
 from common import dataset

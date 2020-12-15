@@ -34,6 +34,7 @@ def build_impala_cnn(unscaled_images, depths=[16,32,32], **conv_kwargs):
     layer_num = 0
 
     def get_layer_num_str():
+        nonlocal layer_num
         d = {'y' : layer_num}
         num_str = str(d['y'])
         d['y'] += 1
