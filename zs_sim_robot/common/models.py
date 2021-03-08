@@ -31,11 +31,9 @@ def build_impala_cnn(unscaled_images, depths=[16,32,32], **conv_kwargs):
     Importance Weighted Actor-Learner Architectures" https://arxiv.org/abs/1802.01561
     """
 
-    layer_num = 0
+    d = {'y' : 0}
 
     def get_layer_num_str():
-        nonlocal layer_num
-        d = {'y' : layer_num}
         num_str = str(d['y'])
         d['y'] += 1
         return num_str
