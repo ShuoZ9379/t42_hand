@@ -31,10 +31,6 @@ from r_diff.util.util import to_onehot
 from r_diff.model_config import get_make_mlp_model
 import torch, pickle
 
-if not os.path.exists('./trpo_aip_results/eval/'):
-    os.makedirs('./trpo_aip_results/eval/')
-if not os.path.exists('./trpo_aip_results/single_loss/'):
-    os.makedirs('./trpo_aip_results/single_loss/')
 
 def normalize(data,x_std_arr,x_mean_arr):
     return (data - x_mean_arr[:data.shape[-1]]) / x_std_arr[:data.shape[-1]]
@@ -453,7 +449,7 @@ def learn(*,
                         x_mean_arr, x_std_arr = x_norm_arr[0], x_norm_arr[1]
                         y_mean_arr, y_std_arr = y_norm_arr[0], y_norm_arr[1]
 
-                    clipped_ac = np.clip(ac, np.array([-1.,-1.]), np.array([-1.,-1.]))
+                    clipped_ac = np.clip(ac, np.array([-1.,-1.]), np.array([1.,1.]))
                     goal_loc=ob[:,4:6]
                     sa=np.concatenate(([reacher_adjust_obs(ob)[:,:8],clipped_ac]),axis=1) # ref_ac dim??
                     inpt = normalize(sa,x_std_arr,x_mean_arr)
@@ -463,7 +459,7 @@ def learn(*,
                     state_delta = denormalize(state_delta,y_std_arr,y_mean_arr)
                     next_state = sa[:,:8] + state_delta
                     
-                    dm_imrwd=-np.linalg.norm(goal_loc-next_state[:,6:8],axis=1)-np.sum(np.square(ac),axis=1)
+                    dm_imrwd=-np.linalg.norm(goal_loc-next_state[:,6:8],axis=1)-np.sum(np.square(clipped_ac),axis=1)
                     if accurate:
                         r_diff_label=np.clip(np.abs((dm_imrwd-imrwd)/np.abs(dm_imrwd)),a_min=None, a_max=1)
                     else:
@@ -472,7 +468,7 @@ def learn(*,
                     #r_diff_label=np.clip(100*(dm_imrwd-imrwd),0,1)
                     #print(r_diff_label)
 
-                    r_diff_model.add_data_batch(ob, ac, r_diff_label)
+                    r_diff_model.add_data_batch(ob, clipped_ac, r_diff_label)
                     if (iters_so_far+1) % r_diff_train_freq==0:
                         r_diff_model.update_forward_dynamic(require_update=True, 
                             ob_val=val_dataset['ob'], ac_val=val_dataset['ac'], r_diff_label_val=val_dataset['r_diff_label'])

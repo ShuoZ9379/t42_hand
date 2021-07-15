@@ -377,6 +377,9 @@ def plot_results(
                 ystderr = ystd / np.sqrt(len(ys))
                 l, = axarr[idx_row][idx_col].plot(usex, ymean, color=color)
                 g2l[group] = l
+
+                print('Last Y:' ymean[-1])
+
                 if shaded_err:
                     ax.fill_between(usex, ymean - ystderr, ymean + ystderr, color=color, alpha=.4)
                 if shaded_std:

@@ -25,19 +25,24 @@ def reacher_adjust_obs(obs):
     else:
         return np.concatenate((obs[:,:4],obs[:,6:8],obs[:,8:10]+obs[:,4:6],obs[:,4:6]),axis=1)
 
-def get_ppo_action_ref(obs,policy_ref,env_name='Reacher-v2',ref_stochastic=True):
+def get_ppo_action_ref(obs,policy_ref,env_name='Reacher-v2',ref_stochastic=False):
     if env_name=='Reacher-v2':
         adjusted_obs=reacher_adjust_obs(obs)
         if len(adjusted_obs.shape)==1:
             adjusted_obs=adjusted_obs.reshape((1,-1))
-        actions, values, _, neglogpacs=policy_ref.step(adjusted_obs[0,:])
-        actions_ref=actions.reshape((1,-1))
-        for i in range(1,adjusted_obs.shape[0]):
-            if not stochastic:
-                actions, values, _, neglogpacs = policy_ref._evaluate([self.pd.mode(), self.vf, self.state, self.neglogp], adjusted_obs[i,:])
-            else:
+        if not ref_stochastic:
+            pl=policy_ref.act_model
+            actions, values, _, neglogpacs=pl._evaluate([pl.pd.mode(), pl.vf, pl.state, pl.neglogp], adjusted_obs[0,:])
+            actions_ref=actions.reshape((1,-1))
+            for i in range(1,adjusted_obs.shape[0]):
+                actions, values, _, neglogpacs = pl._evaluate([pl.pd.mode(), pl.vf, pl.state, pl.neglogp], adjusted_obs[i,:])
+                actions_ref=np.concatenate((actions_ref,actions),axis=0)
+        else:
+            actions, values, _, neglogpacs=policy_ref.step(adjusted_obs[0,:])
+            actions_ref=actions.reshape((1,-1))
+            for i in range(1,adjusted_obs.shape[0]):
                 actions, values, _, neglogpacs = policy_ref.step(adjusted_obs[i,:])
-            actions_ref=np.concatenate((actions_ref,actions),axis=0)
+                actions_ref=np.concatenate((actions_ref,actions),axis=0)
     else:
         raise NotImplementedError
     return actions_ref
@@ -131,18 +136,21 @@ class PolicyWithValue(object):
             action_ref=get_ppo_action_ref(observation,self.policy_ref,env_name=self.env_name,ref_stochastic=ref_stochastic)
         else:
             raise NotImplementedError
-        if self.ablation=='auto':
-            if not self.r_diff_model.started:
-                alpha=np.array([[1.0]])
-            else:
-                r_diff=self.r_diff_model.predict(observation,action_ref)
-                if self.alpha_func=='squared':
-                    alpha=1-np.sqrt(r_diff)
-                    #print(alpha)
+        if self.env_name=="Reacher-v2":
+            if self.ablation=='auto':
+                if not self.r_diff_model.started:
+                    alpha=np.array([[1.0]])
                 else:
-                    raise NotImplementedError
+                    r_diff=self.r_diff_model.predict(observation,np.clip(action_ref, np.array([-1.,-1.]), np.array([1.,1.])))
+                    if self.alpha_func=='squared':
+                        alpha=1-np.sqrt(r_diff)
+                        #print(alpha)
+                    else:
+                        raise NotImplementedError
+            else:
+                alpha=np.array([[float(self.ablation)]])
         else:
-            alpha=np.array([[float(self.ablation)]])
+            raise NotImplementedError
         
         if stochastic:
             a, v, state, neglogp = self._evaluate([self.action_sto, self.vf, self.state, self.neglogp_sto], observation,action_ref, alpha, **extra_feed)
@@ -150,7 +158,8 @@ class PolicyWithValue(object):
             a, v, state, neglogp = self._evaluate([self.action_det, self.vf, self.state,self.neglogp_det], observation, action_ref, alpha, **extra_feed)
         if state.size == 0:
             state = None
-        return a, v, state, neglogp, action_ref[0], alpha[0]
+        #return a, v, state, neglogp, action_ref[0], alpha[0]
+        return a, v, state, neglogp, action_ref, alpha
 
     def value(self, ob, *args, **kwargs):
         """
