@@ -1,0 +1,8 @@
+1. reacher (less data)
+2. acrobot 
+3. fetchreacher一切+设定obs
+
+
+Big:
+1. potential func学习+设计reward
+2. Equation（3）里的Q ：用要学习的policy 来分别在real和dynamics model里rollout？（d>=0或alpha=1 就 证明在real里这个a只会更好）
