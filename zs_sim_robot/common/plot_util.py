@@ -224,9 +224,13 @@ COLORS = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'black', 'purple'
         'darkgreen', 'tan', 'salmon', 'gold',  'darkred', 'darkblue']
 
 
-def default_xy_fn(r):
-    x = np.cumsum(r.monitor.l)
-    y = smooth(r.monitor.r, radius=10)
+def default_xy_fn(r,shift):
+    if 'b2048_AIP_alpha_0-' not in r.dirname:
+        x = np.cumsum(r.monitor[shift:].l)
+        y = smooth(r.monitor[:-shift].r, radius=10)
+    else:
+        x = np.cumsum(r.monitor.l)
+        y = smooth(r.monitor.r, radius=10)
     return x,y
 
 def default_xy_half_fn(r):
@@ -263,6 +267,7 @@ def default_split_fn(r):
 
 def plot_results(
     allresults, *,
+    shift=0,
     xy_fn=default_xy_fn,
     #xy_fn=check_alpha_fn,
     split_fn=default_split_fn,
@@ -367,7 +372,7 @@ def plot_results(
         for result in sresults:
             group = group_fn(result)
             g2c[group] += 1
-            x, y = xy_fn(result)
+            x, y = xy_fn(result,shift)
             if x is None: x = np.arange(len(y))
             x, y = map(np.asarray, (x, y))
             if average_group:
