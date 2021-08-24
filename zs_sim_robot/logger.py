@@ -229,13 +229,15 @@ def log(*args):
     """
     Write the sequence of args, with no separators, to the console and output files (if you've configured an output file).
     """
+    #get_current().log(*args,level=level) #python3
     get_current().log(*args)
 
 def debug(*args):
     log(*args, level=DEBUG)
 
 def info(*args):
-    log(*args, level=INFO)
+    #log(*args, level=INFO) #python3
+    log(*args)
 
 def warn(*args):
     log(*args, level=WARN)

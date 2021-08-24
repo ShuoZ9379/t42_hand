@@ -1,6 +1,6 @@
 import sys
 sys.stdout.flush()
-import re
+import re,os
 import multiprocessing
 import os.path as osp
 import gym
@@ -54,19 +54,37 @@ _game_envs['retro'] = {
     'SpaceInvaders-Snes',
 }
 
+#prsd 17 is poorly trained ppo reference policy 
+
+#ho 0.9999 (Dynamics Model: No Bias)
+#for alph in auto auto_clf; do for nn in 5; do for hh in 0.9999; do for ee in 500; do for ps in 7; do for ss in 3 4 5; do python3 aip_run.py --alg=trpo_aip --env=Reacher-v2 --network=mlp --num_timesteps=5e$nn 
+#--log_path=./icra_results/reacher_train_logs_ho${hh}_dmep${ee}_prsd${ps}/b2048_AIP_alpha_${alph}-$ss/ --log_interval=1 
+#--save_path=./icra_results/reacher_models_ho${hh}_dmep${ee}_prsd${ps}/AIP_alpha_${alph}_seed_$ss --with_obs=0 --obs_idx=20 --ah_with_goal_loc=1 --ah_goal_loc_idx=0 --ah_with_reach_goal=1 --goal_height=1.0 --num_eval_eps=2 --compare=0 --compare_ah_idx=0 --reacher_sd=2 --acrobot_sd=1 
+#--need_eval=False --plot_single_loss=True --single_loss_suf=_aip --ctrl_rwd=1 --seed=$ss --ablation=$alph --dm_epochs=$ee --ho=$hh --poref_seed=$ps; done; done; done; done; done; done
+
+
+#Tuned ho 0.9999 (Dynamics Model: No Bias)
+#for alph in auto_clf_ln; do for nn in 5; do for hh in 0.9999; do for ee in 500; do for ps in 7; do for ss in 3 4 5; do python3 aip_run.py --alg=trpo_aip --env=Reacher-v2 --network=mlp --num_timesteps=5e$nn 
+#--log_path=./icra_results/reacher_train_logs_ho${hh}_dmep${ee}_prsd${ps}/b2048_AIP_alpha_${alph}-$ss/ --log_interval=1 
+#--save_path=./icra_results/reacher_models_ho${hh}_dmep${ee}_prsd${ps}/AIP_alpha_${alph}_seed_$ss --with_obs=0 --obs_idx=20 --ah_with_goal_loc=1 --ah_goal_loc_idx=0 --ah_with_reach_goal=1 --goal_height=1.0 --num_eval_eps=2 --compare=0 --compare_ah_idx=0 --reacher_sd=2 --acrobot_sd=1 
+#--need_eval=False --plot_single_loss=True --single_loss_suf=_aip --ctrl_rwd=1 --seed=$ss --ablation=$alph --dm_epochs=$ee --ho=$hh --poref_seed=$ps; done; done; done; done; done; done
+
+
+
 def train(args, extra_args):
     env_type, env_id = get_env_type(args)
     print('env_type: {}'.format(env_type))
     total_timesteps = int(args.num_timesteps)
     seed = args.seed
-    ho=args.ho
     #print(args,extra_args)
     if env_id=='Reacher-v2':
-        env_ref=build_env_ref('corl_Reacher-v2',0,1.0,ho=0.999)
+        env_ref=build_env_ref('corl_Reacher-v2',seed=0,goal_height=1.0,ho=args.ho,dm_epochs=args.dm_epochs)
         if args.ref_type=='ppo':
             policy_ref = build_policy_ref(env_ref, 'mlp', value_network='copy')
             policy_ref=Model(policy=policy_ref, env_type='corl', ob_space=env_ref.observation_space, ac_space=env_ref.action_space, nbatch_act=1, nbatch_train=64,ent_coef=0.0, vf_coef=0.5,max_grad_norm=0.5, comm=None, mpi_rank_weight=1)
-            policy_ref.load('./ppo2_results/models_bkup/corl_Reacher-v2/seed_ho0.999_7')
+            if args.ho>=0.999:
+                policy_ref_name='./ppo2_results/models_bkup/corl_Reacher-v2/seed_ho'+str(args.ho)+'_dmep'+str(args.dm_epochs)+'_'+str(args.poref_seed)
+            policy_ref.load(policy_ref_name)
     
     learn = get_learn_function(args.alg)
     alg_kwargs = get_learn_function_defaults(args.alg, env_type)
@@ -89,7 +107,8 @@ def train(args, extra_args):
         env_type=env_type,
         total_timesteps=total_timesteps,
         save_path=osp.expanduser(args.save_path),
-        ho=ho,
+        ho=args.ho,
+        dm_epochs=args.dm_epochs,
         seed=seed,
         ref_type=args.ref_type,
         **alg_kwargs
@@ -121,7 +140,7 @@ def build_env(args):
         config.gpu_options.allow_growth = True
         get_session(config=config)
         flatten_dict_observations = alg not in {'her'}
-        env = make_vec_env(env_id, env_type, args.horizon, args.with_obs, args.with_obs_end, args.obs_idx, args.obs_pen, args.sparse, args.ah_with_goal_loc, args.ah_goal_loc_idx, args.ah_with_reach_goal, args.ctrl_rwd, args.final_rwd, args.ctrl_rwd_coef, args.ho, args.goal_height, args.num_env or 1, seed, reward_scale=args.reward_scale, flatten_dict_observations=flatten_dict_observations)
+        env = make_vec_env(env_id, env_type, args.horizon, args.with_obs, args.with_obs_end, args.obs_idx, args.obs_pen, args.sparse, args.ah_with_goal_loc, args.ah_goal_loc_idx, args.ah_with_reach_goal, args.ctrl_rwd, args.final_rwd, args.ctrl_rwd_coef, args.ho, args.goal_height, args.num_env or 1, seed, reward_scale=args.reward_scale, flatten_dict_observations=flatten_dict_observations,dm_epochs=args.dm_epochs)
 
         #if env_type == 'mujoco':
         #    env = VecNormalize(env, use_tf=True)
@@ -207,12 +226,27 @@ def main(args):
     args, unknown_args = arg_parser.parse_known_args(args)
     extra_args = parse_cmdline_kwargs(unknown_args)
     rank = 0
+    if args.ho==0.999:
+        final_dm_epochs=100
+    elif args.ho==0.9999:
+        final_dm_epochs=500
+    elif args.ho==0.99995:
+        final_dm_epochs=150
+    else:
+        raise ValueError('ho is now only limited to 0.999, 0.9999 and 0.99995.')
+    if args.dm_epochs!=final_dm_epochs:
+        raise ValueError('Only one dm_epochs is now allowed for each ho.')
     configure_logger(args.log_path)
 
     model, env = train(args, extra_args)
 
     if args.save_path is not None and rank == 0:
         save_path = osp.expanduser(args.save_path)
+        save_dir=''
+        for i in save_path.split('/')[:-1]:
+            save_dir+=i+'/'
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
         model.save(save_path)
 
     if args.play:

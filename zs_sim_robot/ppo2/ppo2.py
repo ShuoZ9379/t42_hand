@@ -18,19 +18,20 @@ except ImportError:
 from ppo2.runner import Runner
 if not os.path.exists('./ppo2_results/eval/'):
     os.makedirs('./ppo2_results/eval/')
-if not os.path.exists('./ppo2_results/single_loss/'):
-    os.makedirs('./ppo2_results/single_loss/')
+#if not os.path.exists('./ppo2_results/single_loss/'):
+#    os.makedirs('./ppo2_results/single_loss/')
 
 def constfn(val):
     def f(_):
         return val
     return f
 
+
 # Avoid division error when calculate the mean (in our case if epinfo is empty returns np.nan, not return an error)
 def safemean(xs):
     return np.nan if len(xs) == 0 else np.mean(xs)
 
-def learn(*, network, env, env_type, total_timesteps, save_path, eval_env = None, need_eval=False, num_eval_eps=1, compare=False,compare_ah_idx=8,reacher_sd=1,acrobot_sd=1,ho=0,find_best=0,
+def learn(*, network, env, env_type, total_timesteps, save_path, eval_env = None, need_eval=False, num_eval_eps=1, compare=False,compare_ah_idx=8,reacher_sd=1,acrobot_sd=1,eval_stochastic=True,ho=0,dm_epochs=500,find_best=0,
             seed=None, nsteps=2048, ent_coef=0.0, lr=3e-4,lr_factor=3,
             vf_coef=0.5,  max_grad_norm=0.5, gamma=0.99, lam=0.95,
             log_interval=1, nminibatches=4, noptepochs=4, cliprange=0.2,
@@ -302,9 +303,8 @@ def learn(*, network, env, env_type, total_timesteps, save_path, eval_env = None
                     logger.logkv('best eps length:',np.min(best_eps_len_ls))
                 logger.dumpkvs()
             #else:
-            #    best_model=model
-            #    best_model_a=model
-
+                #best_model=model
+                #best_model_a=model
 
     else:
         if compare:
@@ -314,7 +314,7 @@ def learn(*, network, env, env_type, total_timesteps, save_path, eval_env = None
             lrnow = lr(1.0)
             cliprangenow = cliprange(1.0)
             logger.info('Evaluation: Stepping environment...')
-            obs, returns, masks, actions, values, neglogpacs, states, epinfos, final_obs, succ, best_eps_ret, best_eps_len = runner.run(env_type,do_eval=True,num_eval_eps=num_eval_eps,compare=compare,compare_ah_idx=compare_ah_idx,reacher_sd=reacher_sd,acrobot_sd=acrobot_sd) #pylint: disable=E0632
+            obs, returns, masks, actions, values, neglogpacs, states, epinfos, final_obs, succ, best_eps_ret, best_eps_len = runner.run(env_type,do_eval=True,num_eval_eps=num_eval_eps,compare=compare,compare_ah_idx=compare_ah_idx,reacher_sd=reacher_sd,acrobot_sd=acrobot_sd,eval_stochastic=eval_stochastic) #pylint: disable=E0632
             logger.info('Evaluation: Done.')
             do_eval_epinfobuf=deque(maxlen=100)
             do_eval_epinfobuf.extend(epinfos)
@@ -347,17 +347,17 @@ def learn(*, network, env, env_type, total_timesteps, save_path, eval_env = None
             observ=obs[start_index:start_index+do_eval_epinfobuf[0]['l'],:]
             observ=np.concatenate([observ,final_obs[0]],axis=0)
             if not compare:
-                plot_eval_eps(seed,observ,env,eval_eps,compare)
+                plot_eval_eps(ho,seed,observ,env,eval_eps,compare,pre_suf=single_loss_suf,dm_epochs=dm_epochs)
             else:
                 if env.env_name=='ah' or env.env_name=='real_ah':
-                    plot_eval_eps(ho,seed,observ,env,compare_ah_idx,compare,pre_suf=single_loss_suf)
+                    plot_eval_eps(ho,seed,observ,env,compare_ah_idx,compare,pre_suf=single_loss_suf,eval_stochastic=eval_stochastic)
                 elif env.env_name=='corl_Reacher-v2':
-                    plot_eval_eps(ho,seed,observ,env,reacher_sd,compare)
+                    plot_eval_eps(ho,seed,observ,env,reacher_sd,compare,dm_epochs=dm_epochs,eval_stochastic=eval_stochastic)
                 elif env.env_name=='corl_Acrobot-v1':
-                    plot_eval_eps(ho,seed,observ,env,acrobot_sd,compare)
+                    plot_eval_eps(ho,seed,observ,env,acrobot_sd,compare,eval_stochastic=eval_stochastic)
     return model
 
-def plot_eval_eps(ho,seed,observ,env,idx,compare,pre_suf=''):
+def plot_eval_eps(ho,seed,observ,env,idx,compare,pre_suf='',dm_epochs=500,eval_stochastic=True):
     if env.env_name=='ah':
         if env.state_with_goal_loc:
             goal_loc=observ[0,4:6]
@@ -399,10 +399,14 @@ def plot_eval_eps(ho,seed,observ,env,idx,compare,pre_suf=''):
                 goal_loc_suffix='_noobs_with_goal_loc'
             else:
                 goal_loc_suffix='_noobs_without_goal_loc'
-        if env.with_obs:
-            plt.savefig('./ppo2_results/eval/Eval_model_seed_'+str(seed)+'_lr_'+str(lr_factor)+'_total_timesteps_'+str(total_timesteps)+'_obs_idx_'+str(env.obs_idx)+goal_loc_suffix+'_'+env.env_name+'_'+str(idx)+pre_suf+suffix+'_compare.png',dpi=200)
+        if eval_stochastic:
+            pre_suf+='_sto'
         else:
-            plt.savefig('./ppo2_results/eval/Eval_model_seed_'+str(seed)+'_lr_'+str(lr_factor)+'_total_timesteps_'+str(total_timesteps)+'_obs_idx_20'+goal_loc_suffix+'_'+env.env_name+'_'+str(idx)+pre_suf+suffix+'_compare.png',dpi=200)
+            pre_suf+='_det'
+        if env.with_obs:
+            plt.savefig('./ppo2_results/eval/Eval_model_seed_'+str(seed)+str(total_timesteps)+'_obs_idx_'+str(env.obs_idx)+goal_loc_suffix+'_'+env.env_name+'_'+str(idx)+pre_suf+suffix+'_compare.png',dpi=200)
+        else:
+            plt.savefig('./ppo2_results/eval/Eval_model_seed_'+str(seed)+str(total_timesteps)+'_obs_idx_20'+goal_loc_suffix+'_'+env.env_name+'_'+str(idx)+pre_suf+suffix+'_compare.png',dpi=200)
     
     elif env.env_name=='corl_Reacher-v2':
         goal_loc=observ[0,-2:]
@@ -419,10 +423,16 @@ def plot_eval_eps(ho,seed,observ,env,idx,compare,pre_suf=''):
         plt.legend()
         if ho!=0:
             pre_suf='_ho'+str(ho)
-        if not compare:
-            plt.savefig('./ppo2_results/eval/Eval_model_seed_'+str(seed)+'_lr_'+str(lr_factor)+'_total_timesteps_'+str(total_timesteps)+'_'+env.env_name+'_'+str(idx)+pre_suf+'_not_compare.png',dpi=200)
+        if ho==0.9999:
+            pre_suf+='_dmep'+str(dm_epochs)
+        if eval_stochastic:
+            pre_suf+='_sto'
         else:
-            plt.savefig('./ppo2_results/eval/Eval_model_seed_'+str(seed)+'_lr_'+str(lr_factor)+'_total_timesteps_'+str(total_timesteps)+'_'+env.env_name+'_'+str(idx)+pre_suf+'_compare.png',dpi=200)
+            pre_suf+='_det'
+        if not compare:
+            plt.savefig('./ppo2_results/eval/Eval_model_seed_'+str(seed)+'_'+env.env_name+'_'+str(idx)+pre_suf+'_not_compare.png',dpi=200)
+        else:
+            plt.savefig('./ppo2_results/eval/Eval_model_seed_'+str(seed)+'_'+env.env_name+'_'+str(idx)+pre_suf+'_compare.png',dpi=200)
 
     elif env.env_name=='corl_Acrobot-v1':
         fig, ax = plt.subplots(figsize=(8,8))
@@ -433,10 +443,14 @@ def plot_eval_eps(ho,seed,observ,env,idx,compare,pre_suf=''):
         plt.xlabel('Steps')
         plt.ylabel('Y position')
         plt.legend()
-        if not compare:
-            plt.savefig('./ppo2_results/eval/Eval_model_seed_'+str(seed)+'_lr_'+str(lr_factor)+'_total_timesteps_'+str(total_timesteps)+'_goal_height_'+str(env.goal_height)+'_'+env.env_name+'_'+str(idx)+pre_suf+'_not_compare.png',dpi=200)
+        if eval_stochastic:
+            pre_suf+='_sto'
         else:
-            plt.savefig('./ppo2_results/eval/Eval_model_seed_'+str(seed)+'_lr_'+str(lr_factor)+'_total_timesteps_'+str(total_timesteps)+'_goal_height_'+str(env.goal_height)+'_'+env.env_name+'_'+str(idx)+pre_suf+'_compare.png',dpi=200)
+            pre_suf+='_det'
+        if not compare:
+            plt.savefig('./ppo2_results/eval/Eval_model_seed_'+str(seed)+'_goal_height_'+str(env.goal_height)+'_'+env.env_name+'_'+str(idx)+pre_suf+'_not_compare.png',dpi=200)
+        else:
+            plt.savefig('./ppo2_results/eval/Eval_model_seed_'+str(seed)+'_goal_height_'+str(env.goal_height)+'_'+env.env_name+'_'+str(idx)+pre_suf+'_compare.png',dpi=200)
     
     elif env.env_name=='real_ah':
         if env.state_with_goal_loc:
@@ -478,10 +492,14 @@ def plot_eval_eps(ho,seed,observ,env,idx,compare,pre_suf=''):
                 goal_loc_suffix='_noobs_with_goal_loc'
             else:
                 goal_loc_suffix='_noobs_without_goal_loc'
-        if env.with_obs:
-            plt.savefig('./ppo2_results/eval/Eval_model_seed_'+str(seed)+'_lr_'+str(lr_factor)+'_total_timesteps_'+str(total_timesteps)+'_obs_idx_'+str(env.obs_idx)+goal_loc_suffix+'_'+env.env_name+'_'+str(idx)+pre_suf+suffix+'_compare.png',dpi=200)
+        if eval_stochastic:
+            pre_suf+='_sto'
         else:
-            plt.savefig('./ppo2_results/eval/Eval_model_seed_'+str(seed)+'_lr_'+str(lr_factor)+'_total_timesteps_'+str(total_timesteps)+'_obs_idx_20'+goal_loc_suffix+'_'+env.env_name+'_'+str(idx)+pre_suf+suffix+'_compare.png',dpi=200)
+            pre_suf+='_det'
+        if env.with_obs:
+            plt.savefig('./ppo2_results/eval/Eval_model_seed_'+str(seed)+'_obs_idx_'+str(env.obs_idx)+goal_loc_suffix+'_'+env.env_name+'_'+str(idx)+pre_suf+suffix+'_compare.png',dpi=200)
+        else:
+            plt.savefig('./ppo2_results/eval/Eval_model_seed_'+str(seed)+'_obs_idx_20'+goal_loc_suffix+'_'+env.env_name+'_'+str(idx)+pre_suf+suffix+'_compare.png',dpi=200)
     
     else:
         raise NotImplementedError

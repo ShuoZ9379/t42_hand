@@ -13,10 +13,9 @@ import sys
 from .hyperparameters import *
 from .predict import get_x_and_y,get_y
 #argv env_name lr nodes epochs ho_rate, data_file_suffix, model_name_suffix(_v1, ...) seed
-
+#python3 -m mjo_exp.train Reacher-v2 0.0001 512 500 0.9999
 
 def main(env_name,lr,nodes,epochs=50,ho_rate=0,data_file_suffix='train',model_name_suffix='',seed=0):
-
     held_out = .1
     dropout_rate = .0
     epoch_save_interval=10000000

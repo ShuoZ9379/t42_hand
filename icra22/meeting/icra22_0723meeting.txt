@@ -1,0 +1,18 @@
+一，为了使aip对比model based方法更显出效果：
+0. check alpha： OK！
+1. tune eq(5) （and accordingly eq（3））(classify)
+2. interesting biased model: data during training of model is collected from policy not uniform (any heuristic policy, first phase of mfrl, etc) (bias of policy)
+
+
+
+二，为了给model free方法增加难度(也是为了证明aip比model free更快找到还不错的解)：
+1. potential func学习+设计reward,然后reacher设定obs一切再做
+
+
+解决shortshighted问题（可以同时解决一与二）：
+tune eq（4）Q的定义（也是Equation（3）里的Q）：用要学习的policy 来分别在real和dynamics model里rollout？（d>=0或alpha=1 就 证明在real里这个a只会更好）
+
+其他：
+1. acrobot ,fetchreacher
+
+

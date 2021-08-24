@@ -36,7 +36,7 @@ class action_space(object):
 		return a
 
 class corl_reacher(object):
-	def __init__(self,env_seed=0,ho=0,ctrl_rew=True,with_reach_goal_terminal=False):
+	def __init__(self,env_seed=0,ho=0,ctrl_rew=True,with_reach_goal_terminal=False,dm_epochs=500):
 		self.env_name='corl_Reacher-v2'
 		self.suc=False
 		torch.manual_seed(env_seed)
@@ -50,13 +50,14 @@ class corl_reacher(object):
 		self.reward_range=(-np.inf,np.inf)
 		self.metadata=None
 		self.horizon=50
+		self.dm_epochs=dm_epochs
 
-		if ho==0.999:
-			self.reacher_model_path='./trans_model_data/Reacher-v2_model/Reacher-v2_model_lr0.0001_nodes512_seed0_ho0.999_epochs_100'
-		elif ho==0:
+		if ho==0:
 			self.reacher_model_path='./trans_model_data/Reacher-v2_model/Reacher-v2_model_lr0.0001_nodes512_seed0_epochs_50'
-		else:
+		elif ho<0.999:
 			self.reacher_model_path='./trans_model_data/Reacher-v2_model/Reacher-v2_model_lr0.0001_nodes512_seed0_ho'+str(ho)+'_epochs_50'
+		else:
+			self.reacher_model_path='./trans_model_data/Reacher-v2_model/Reacher-v2_model_lr0.0001_nodes512_seed0_ho'+str(ho)+'_epochs_'+str(self.dm_epochs)
 		if ho==0:
 			self.norm_path='./trans_model_data/Reacher-v2_normalization/normalization_arr'
 		else:

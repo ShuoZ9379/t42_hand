@@ -29,7 +29,6 @@ class TrajModelTrainer():
         self.val_size = val_size
         self.cuda=cuda
         if val_size:
-            self.val_episodes=episodes[-val_size:]
             self.episodes=episodes[:-val_size]
             episodes=np.concatenate(episodes)
             np.random.shuffle(episodes)
@@ -37,7 +36,6 @@ class TrajModelTrainer():
             self.norm, data, val_data= self.get_norms(episodes, val_size)
             self.x_val_data, self.y_val_data = val_data
         else:
-            self.val_episodes=None
             self.episodes=episodes
             episodes=np.concatenate(episodes)
             np.random.shuffle(episodes)

@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import glob,pickle,os,copy,sys,random
 import sys
 from .hyperparameters import *
-#argv num_test env_name lr nodes model_ep model_name_suffix(_v1, ...) data_file_suffix seed
+#argv num_test env_name lr nodes ho_rate model_ep data_file_suffix model_name_suffix(_v1, ...) seed xy_plot
 def get_x_and_y(gt_states_for_plot):
     sai=gt_states_for_plot[:,1:2]+(gt_states_for_plot[:,3:4]*gt_states_for_plot[:,:1]+gt_states_for_plot[:,2:3]*gt_states_for_plot[:,1:2])
     cosai=-gt_states_for_plot[:,:1]-(gt_states_for_plot[:,2:3]*gt_states_for_plot[:,:1]-gt_states_for_plot[:,3:4]*gt_states_for_plot[:,1:2])
@@ -18,7 +18,7 @@ def get_y(gt_states_for_plot):
     cosai=-gt_states_for_plot[:,:1]-(gt_states_for_plot[:,2:3]*gt_states_for_plot[:,:1]-gt_states_for_plot[:,3:4]*gt_states_for_plot[:,1:2])
     return cosai
 
-def main(num_test,env_name,lr,nodes,model_ep,xy_plot=0,data_file_suffix='train',model_name_suffix='',seed=0):
+def main(num_test,env_name,lr,nodes,ho_rate, model_ep,data_file_suffix='train',model_name_suffix='',seed=0,xy_plot=0):
     dropout_rate = .0
     epoch_save_interval=5
     retrain=False
@@ -33,6 +33,7 @@ def main(num_test,env_name,lr,nodes,model_ep,xy_plot=0,data_file_suffix='train',
     num_test=int(num_test)
     lr=float(lr)
     nodes=int(nodes)
+    ho_rate=float(ho_rate)
     model_ep=int(model_ep)
     seed=int(seed)
     xy_plot=int(xy_plot)
@@ -104,12 +105,13 @@ def main(num_test,env_name,lr,nodes,model_ep,xy_plot=0,data_file_suffix='train',
 
     save_path = './trans_model_data'+model_name_suffix+'/'
     error_path = save_path+env_name+'_error/'
-    norm_path = save_path+env_name+'_normalization/'
     pred_path = save_path+env_name+'_pred/'
     if not os.path.exists(pred_path):
         os.makedirs(pred_path)
     
-    model_save_path = save_path + env_name + '_model_lr' + str(lr)+ '_nodes' + str(nodes) + '_seed'+str(seed)
+    model_save_path = save_path + env_name + '_model/' + env_name +  '_model_lr' + str(lr)+ '_nodes' + str(nodes) + '_seed'+str(seed)
+    if ho_rate!=0:
+        model_save_path+='_ho'+str(ho_rate)
     pred_fig_path = pred_path + 'traj_lr' + str(lr)+ '_nodes' + str(nodes) + '_seed'+str(seed)
     if model_ep!=0:
         model_save_path += '_epochs_'+str(model_ep)
@@ -155,8 +157,12 @@ def main(num_test,env_name,lr,nodes,model_ep,xy_plot=0,data_file_suffix='train',
             plt.scatter(gt_states_for_plot[0, x_loc], gt_states_for_plot[0, y_loc], s=150, c='k', marker="*",label='start')
             plt.plot(gt_states_for_plot[:, x_loc], gt_states_for_plot[:, y_loc], color='blue', label='Ground Truth', marker='.', markersize=2, linewidth=1)
             plt.plot(pred_states[:, x_loc], pred_states[:, y_loc], color='red', label='NN Prediction')
+            #print(pred_states[-2:,x_loc],pred_states[-2:,y_loc])
             plt.axis('scaled')
-            fig_loc=pred_fig_path +'_traj_'+str(i+1)+'_pos.png'
+            if ho_rate!=0:
+                fig_loc=pred_fig_path +'_traj_'+str(i+1)+'_ho'+str(ho_rate)+'_pos.png'
+            else:
+                fig_loc=pred_fig_path +'_traj_'+str(i+1)+'_pos.png'
         plt.title('Trajectory '+str(i+1)+ ' Pos Space')
         plt.legend()
         fig.set_size_inches(10, 10)

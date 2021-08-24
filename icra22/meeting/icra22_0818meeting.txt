@@ -1,0 +1,7 @@
+1. tune the way of alpha so that model free is worse than AIP in terms of final performance
+
+2. Harder physics With obstacles
+
+2.5 MC rollout , sum of all immediate reward
+
+3.Fetchreacher

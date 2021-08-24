@@ -18,11 +18,13 @@ class ForwardDynamic(object):
             normalize_obs=False,             
             memory_size=int(1e5),
             scope='forward_dynamic', 
+            classify=False,
             **kwargs):
         logger.log('Forward dynamic args', locals())
         
         self.ob_space = ob_space
         self.ac_space = ac_space
+        self.classify = classify
 
         self.num_ob = int(np.prod(self.ob_space.shape))
         if isinstance(self.ac_space, gym.spaces.Discrete):
@@ -39,7 +41,7 @@ class ForwardDynamic(object):
 
         # TODO: add PNN, for now DNN
         with tf.variable_scope(scope) as _:
-            self.model = NN(num_input=self.input_shape[0], num_output=self.output_shape[0], make_model=make_model, **kwargs)
+            self.model = NN(num_input=self.input_shape[0], num_output=self.output_shape[0], make_model=make_model, classify=self.classify, **kwargs)
         
         self.memory = Memory(limit=memory_size, action_shape=(self.num_ac,), observation_shape=(self.num_ob,))
         self.normalize_obs = normalize_obs

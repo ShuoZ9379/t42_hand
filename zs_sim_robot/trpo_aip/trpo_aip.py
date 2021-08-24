@@ -1,4 +1,4 @@
-import sys
+import sys,math
 sys.stdout.flush()
 from common.math_util import explained_variance
 from common.misc_util import zipsame
@@ -38,8 +38,10 @@ def normalize(data,x_std_arr,x_mean_arr):
 def denormalize(data,y_std_arr,y_mean_arr):
     return data * y_std_arr[:data.shape[-1]] + y_mean_arr[:data.shape[-1]]
 
-def traj_segment_generator(pi, env, horizon, stochastic,ref_stochastic=False):
+def traj_segment_generator(pi, env, horizon, total_timesteps, stochastic,ref_stochastic=False):
     # Initialize state variables
+    max_iters=math.floor(total_timesteps/horizon)
+    iter_now=0
     t = 0
     ac = env.action_space.sample()
     new = True
@@ -48,9 +50,16 @@ def traj_segment_generator(pi, env, horizon, stochastic,ref_stochastic=False):
 
     cur_ep_ret = 0
     cur_ep_len = 0
+    min_alpha=1
+    max_alpha=0
+    mean_alpha=[]
     ep_rets = []
     ep_lens = []
     final_obs=[]
+    min_alphas=[]
+    max_alphas=[]
+    mean_alphas=[]
+    clf_alphas_percent=[]
 
     # Initialize history arrays
     obs = np.array([ob for _ in range(horizon)])
@@ -63,21 +72,32 @@ def traj_segment_generator(pi, env, horizon, stochastic,ref_stochastic=False):
     prevacs = acs.copy()
 
     while True:
+        if stochastic:
+            if not pi.r_diff_model.started and pi.ablation=='init1detthen0':
+                sto=False
+            else:
+                sto=True
+        else:
+            sto=False
         prevac = ac
-        ac, vpred, _, _, ac_ref, alpha = pi.step(ob,stochastic=stochastic,ref_stochastic=ref_stochastic)
+        ac, vpred, _, _, ac_ref, alpha = pi.step(ob,stochastic=sto,ref_stochastic=ref_stochastic,iter_progress=iter_now/max_iters)
         # Slight weirdness here because we need value function at time T
         # before returning segment [0, T-1] so we get the correct
         # terminal value
         if t > 0 and t % horizon == 0:
             yield {"ob" : obs, "ac_ref": ac_refs, "alpha": alphas, "rew" : rews, "vpred" : vpreds, "new" : news,
                     "ac" : acs, "prevac" : prevacs, "nextvpred": vpred * (1 - new),
-                    "ep_rets" : ep_rets, "ep_lens" : ep_lens, "final_obs": np.array(final_obs)}
-            _, vpred, _, _, _, _ = pi.step(ob, stochastic=stochastic,ref_stochastic=ref_stochastic)
-            #_, vpred, _, _, ac_ref, alpha = pi.step(ob, stochastic=stochastic,ref_stochastic=ref_stochastic)
+                    "ep_rets" : ep_rets, "ep_lens" : ep_lens, "final_obs": np.array(final_obs),'min_alphas':min_alphas,'max_alphas':max_alphas,'mean_alphas':mean_alphas,'clf_alphas_percent':clf_alphas_percent}
+            _, vpred, _, _, _, _ = pi.step(ob, stochastic=sto,ref_stochastic=ref_stochastic,iter_progress=iter_now/max_iters)
+            iter_now+=1
             # Be careful!!! if you change the downstream algorithm to aggregate
             # several of these batches, then be sure to do a deepcopy
             ep_rets = []
             ep_lens = []
+            min_alphas = []
+            max_alphas = []
+            mean_alphas=[]
+            clf_alphas_percent=[]
         i = t % horizon
         obs[i] = ob
         vpreds[i] = vpred
@@ -92,11 +112,21 @@ def traj_segment_generator(pi, env, horizon, stochastic,ref_stochastic=False):
 
         cur_ep_ret += rew
         cur_ep_len += 1
+        min_alpha=min(min_alpha,alpha[0][0])
+        max_alpha=max(max_alpha,alpha[0][0])
+        mean_alpha.append(alpha[0][0])
         if new:
             final_ob=ob.copy()
             final_obs.append(final_ob)
             ep_rets.append(cur_ep_ret)
             ep_lens.append(cur_ep_len)
+            min_alphas.append(min_alpha)
+            max_alphas.append(max_alpha)
+            mean_alphas.append(np.mean(mean_alpha))
+            clf_alphas_percent.append(np.argwhere(np.array(mean_alpha)==1).shape[0]/len(mean_alpha)*100)
+            max_alpha = 0
+            min_alpha = 1
+            mean_alpha=[]
             cur_ep_ret = 0
             cur_ep_len = 0
             ob = env.reset()
@@ -140,6 +170,7 @@ def learn(*,
         plot_single_loss=False, single_loss_suf='',
         save_path=None,
         ho=None,
+        dm_epochs=None,
         lr_factor=None,
         find_best=None,
 
@@ -232,11 +263,16 @@ def learn(*,
         raise NotImplementedError
 
     make_model = get_make_mlp_model(num_fc=num_fc, num_fwd_hidden=num_fwd_hidden, layer_norm=use_layer_norm)
+    if '_clf' in str(ablation):
+        r_diff_classify=True
+    else:
+        r_diff_classify=False
     r_diff_model = R_diff_model(env=env, env_id=env_id, make_model=make_model,
             #num_warm_start=num_warm_start,            
             #init_epochs=init_epochs, 
             update_epochs=update_epochs, 
-            batch_size=batch_size, 
+            batch_size=batch_size,
+            r_diff_classify=r_diff_classify, 
             **network_kwargs)
 
     ob = observation_placeholder(ob_space,name='Ob')
@@ -335,7 +371,7 @@ def learn(*,
 
     # Prepare for rollouts
     # ----------------------------------------
-    seg_gen = traj_segment_generator(pi, env, timesteps_per_batch, stochastic=True,ref_stochastic=ref_stochastic)
+    seg_gen = traj_segment_generator(pi, env, timesteps_per_batch, total_timesteps=total_timesteps, stochastic=True,ref_stochastic=ref_stochastic)
 
     episodes_so_far = 0
     timesteps_so_far = 0
@@ -344,6 +380,11 @@ def learn(*,
     tstart = time.time()
     lenbuffer = deque(maxlen=100) # rolling buffer for episode lengths
     rewbuffer = deque(maxlen=100) # rolling buffer for episode rewards
+    min_alphabuffer = deque(maxlen=100) 
+    max_alphabuffer = deque(maxlen=100) 
+    mean_alphabuffer = deque(maxlen=100)
+    clf_alpha_percentbuffer = deque(maxlen=100)
+    all_eps_min_alphas,all_eps_max_alphas,all_eps_mean_alphas,all_eps_clf_alphas_percent=[],[],[],[]
 
     #if sum([max_iters>0, total_timesteps>0, max_episodes>0])==0:
         # noththing to be done
@@ -372,7 +413,15 @@ def learn(*,
             add_vtarg_and_adv(seg, gamma, lam)
             
             # ob, ac, atarg, ret, td1ret = map(np.concatenate, (obs, acs, atargs, rets, td1rets))
-            ob, ac, atarg, tdlamret, ref_ac, alpha_holder = seg["ob"], seg["ac"], seg["adv"], seg["tdlamret"], seg["ac_ref"], seg["alpha"]
+            ob, ac, atarg, tdlamret, ref_ac = seg["ob"], seg["ac"], seg["adv"], seg["tdlamret"], seg["ac_ref"]
+            all_eps_min_alphas+=seg['min_alphas']
+            all_eps_max_alphas+=seg['max_alphas']
+            all_eps_mean_alphas+=seg['mean_alphas']
+            all_eps_clf_alphas_percent+=seg['clf_alphas_percent']
+            if ablation=='init1then0' or ablation=='init1detthen0':
+                alpha_holder=np.zeros(timesteps_per_batch).reshape((-1,1))
+            else:
+                alpha_holder=seg["alpha"]
 
             imrwd = seg['rew']  
 
@@ -394,6 +443,7 @@ def learn(*,
             g = allmean(g)
             if np.allclose(g, 0):
                 logger.log("Got zero gradient. not updating")
+                meanlosses = surr, kl, *_ = allmean(np.array(compute_losses(*args)))
             else:
                 with timed("cg"):
                     stepdir = cg(fisher_vector_product, g, cg_iters=cg_iters, verbose=rank==0)
@@ -440,10 +490,11 @@ def learn(*,
             
             with timed('r_diff_model'):         
                 if env_id=='Reacher-v2':
-                    model_path='./trans_model_data/Reacher-v2_model/Reacher-v2_model_lr0.0001_nodes512_seed0_ho0.999_epochs_100'
+                    if ho>=0.999:
+                        model_path='./trans_model_data/Reacher-v2_model/Reacher-v2_model_lr0.0001_nodes512_seed0_ho'+str(ho)+'_epochs_'+str(dm_epochs)
                     with open(model_path, 'rb') as pickle_file:
                         reacher_model = torch.load(pickle_file, map_location='cpu')
-                    norm_path='./trans_model_data/Reacher-v2_normalization/normalization_arr_ho0.999'
+                    norm_path='./trans_model_data/Reacher-v2_normalization/normalization_arr_ho'+str(ho)
                     with open(norm_path, 'rb') as pickle_file:
                         x_norm_arr, y_norm_arr = pickle.load(pickle_file)
                         x_mean_arr, x_std_arr = x_norm_arr[0], x_norm_arr[1]
@@ -460,13 +511,16 @@ def learn(*,
                     next_state = sa[:,:8] + state_delta
                     
                     dm_imrwd=-np.linalg.norm(goal_loc-next_state[:,6:8],axis=1)-np.sum(np.square(clipped_ac),axis=1)
-                    if accurate:
-                        r_diff_label=np.clip(np.abs((dm_imrwd-imrwd)/np.abs(dm_imrwd)),a_min=None, a_max=1)
+                    if not r_diff_classify:
+                        if accurate:
+                            r_diff_label=np.clip(np.abs((dm_imrwd-imrwd)/np.abs(dm_imrwd)),a_min=None, a_max=1)
+                        else:
+                            r_diff_label=np.clip((dm_imrwd-imrwd)/np.abs(dm_imrwd),0,1)
+                        #r_diff_label=np.clip(100*(dm_imrwd-imrwd),0,1)
+                        #print(r_diff_label)
                     else:
-                        r_diff_label=np.clip((dm_imrwd-imrwd)/np.abs(dm_imrwd),0,1)
-
-                    #r_diff_label=np.clip(100*(dm_imrwd-imrwd),0,1)
-                    #print(r_diff_label)
+                        r_diff_label=(dm_imrwd-imrwd > 0).astype('float32')
+                        
 
                     r_diff_model.add_data_batch(ob, clipped_ac, r_diff_label)
                     if (iters_so_far+1) % r_diff_train_freq==0:
@@ -479,17 +533,25 @@ def learn(*,
 
             logger.record_tabular("ev_tdlam_before", explained_variance(vpredbefore, tdlamret))
 
-            lrlocal = (seg["ep_lens"], seg["ep_rets"]) # local values
+            lrlocal = (seg["ep_lens"], seg["ep_rets"], seg["min_alphas"], seg['max_alphas'], seg['mean_alphas'], seg['clf_alphas_percent']) # local values
             if MPI is not None:
                 listoflrpairs = MPI.COMM_WORLD.allgather(lrlocal) # list of tuples
             else:
                 listoflrpairs = [lrlocal]
 
-            lens, rews = map(flatten_lists, zip(*listoflrpairs))
+            lens, rews, min_alphas,max_alphas,mean_alphas,clf_alphas_percent = map(flatten_lists, zip(*listoflrpairs))
             lenbuffer.extend(lens)
             rewbuffer.extend(rews)
+            min_alphabuffer.extend(min_alphas)
+            max_alphabuffer.extend(max_alphas)
+            mean_alphabuffer.extend(mean_alphas)
+            clf_alpha_percentbuffer.extend(clf_alphas_percent)
             logger.record_tabular("EpLenMean", np.mean(lenbuffer))
             logger.record_tabular("EpRewMean", np.mean(rewbuffer))
+            logger.record_tabular("MinAlphaMean", np.mean(min_alphabuffer))
+            logger.record_tabular("MaxAlphaMean", np.mean(max_alphabuffer))
+            logger.record_tabular("MeanAlphaMean", np.mean(mean_alphabuffer))
+            logger.record_tabular("ClfAlphaPercentMean", np.mean(clf_alpha_percentbuffer))
             logger.record_tabular("EpThisIter", len(lens))
             episodes_so_far += len(lens)
             timesteps_so_far += sum(lens)
@@ -509,6 +571,15 @@ def learn(*,
                     os.makedirs(checkdir, exist_ok=True)
                     savepath = osp.join(checkdir, '%.5i'%iters_so_far)
                     pi.save(savepath)
+        all_eps_alphas=[all_eps_min_alphas,all_eps_max_alphas,all_eps_mean_alphas,all_eps_clf_alphas_percent]
+        if save_path is not None:
+            save_dir=''
+            for i in save_path.split('/')[:-1]:
+                save_dir+=i+'/'
+            if not os.path.exists(save_dir):
+                os.makedirs(save_dir)
+        with open(save_path+'_alphas','wb') as pkl:
+            pickle.dump(all_eps_alphas,pkl)
         '''
         if plot_single_loss and env_type=='corl':
             plt.plot(eprewmean_ls)

@@ -38,4 +38,4 @@ smooth data:
 
 
 
-Finally, 用no smooth的v1.6_
+Finally, 用with medfilter的v0.1_ (或no medfilter的v1.6_) 

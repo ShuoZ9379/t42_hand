@@ -1,0 +1,22 @@
+一，为了使aip对比model based方法更显出效果：
+最好的结果（既比model based好，又比model free好或者接近model free）: pdf 0811meeting里的fig1.3, fig2.3, fig2.4, fig3.2这四个 （可能还需仔细看这个meetingpdf，或许有补充）
+
+
+二，为了给model free方法增加难度(也是为了证明aip比model free更快找到还不错的解)：
+1. potential func学习+设计reward,然后reacher设定obs一切再做
+
+二点五：其他env
+1. acrobot ,fetchreacher
+
+三，解决shortshighted问题（可以同时解决一与二）：
+tune eq（4）Q的定义（也是Equation（3）里的Q）：用要学习的policy 来分别在real和dynamics model里rollout？（d>=0或alpha=1 就 证明在real里这个a只会更好）
+
+
+
+1. tune the way of alpha so that model free is worse than AIP in terms of final performance
+
+2. Harder physics With obstacles
+
+2.5 MC rollout , sum of all immediate reward
+
+3.Fetchreacher

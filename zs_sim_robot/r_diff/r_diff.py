@@ -21,6 +21,7 @@ class R_diff_model(object):
             #init_epochs=20, 
             update_epochs=1, 
             batch_size=512, 
+            r_diff_classify=False,
             forward_dynamic=None,
             **kwargs):
         logger.log('r_diff args', locals())
@@ -28,12 +29,13 @@ class R_diff_model(object):
         self.ob_space = env.observation_space
         self.ac_space = env.action_space
         self.started = False
+        self.r_diff_classify=r_diff_classify
         
         self.use_self_forward_dynamic = False
         if forward_dynamic is None:
             self.use_self_forward_dynamic = True
-            self.forward_dynamic = ForwardDynamic(ob_space=self.ob_space, ac_space=self.ac_space, make_model=make_model, scope='new_forward_dynamic', **kwargs)
-            self.old_forward_dynamic = ForwardDynamic(ob_space=self.ob_space, ac_space=self.ac_space, make_model=make_model, scope='old_forward_dynamic', **kwargs)
+            self.forward_dynamic = ForwardDynamic(ob_space=self.ob_space, ac_space=self.ac_space, make_model=make_model, scope='new_forward_dynamic', classify=self.r_diff_classify, **kwargs)
+            self.old_forward_dynamic = ForwardDynamic(ob_space=self.ob_space, ac_space=self.ac_space, make_model=make_model, scope='old_forward_dynamic', classify=self.r_diff_classify, **kwargs)
 
             self.update_model = U.function([],[], updates=[tf.assign(oldv, newv)
                 for (oldv, newv) in zipsame(get_variables("old_forward_dynamic"), get_variables("new_forward_dynamic"))])

@@ -50,12 +50,28 @@ _game_envs['retro'] = {
     'SpaceInvaders-Snes',
 }
 
+#Train:
+#for hh in 0.9999; do for ee in 500; do for nn in 6; do for ss in 0; do python3 ppo2_run.py --alg=ppo2 --env=corl_Reacher-v2 --network=mlp --num_timesteps=1e$nn 
+#--log_path=./ppo2_results/train_logs/corl_Reacher-v2/b2048_ho${hh}_dmep${ee}-$ss/ 
+#--log_interval=1 --save_path=./ppo2_results/models_bkup/corl_Reacher-v2/seed_ho${hh}_dmep${ee}_$ss --with_obs=0 
+#--obs_idx=20 --ah_with_goal_loc=1 --ah_goal_loc_idx=0 --ah_with_reach_goal=1 --goal_height=1.0 --num_eval_eps=2 
+#--compare=0 --compare_ah_idx=0 --reacher_sd=2 --acrobot_sd=1 --need_eval=False --plot_single_loss=True 
+#--single_loss_suf=_ho${hh}_dmep${ee} --ctrl_rwd=1 --seed=$ss --dm_epochs=$ee --ho=$hh; done; done; done; done
+
+#Eval:
+#for hh in 0.9999; do for ee in 500; do for nn in 6; do for ss in 0; do python3 ppo2_run.py --alg=ppo2 --env=corl_Reacher-v2 --network=mlp --num_timesteps=1e$nn 
+#--log_interval=1 --load_path=./ppo2_results/models_bkup/corl_Reacher-v2/seed_ho${hh}_dmep${ee}_$ss --with_obs=0 
+#--obs_idx=20 --ah_with_goal_loc=1 --ah_goal_loc_idx=0 --ah_with_reach_goal=1 --goal_height=1.0 --num_eval_eps=2 
+#--compare=1 --compare_ah_idx=0 --reacher_sd=2 --acrobot_sd=1 --need_eval=True --plot_single_loss=True 
+#--single_loss_suf=_ho${hh}_dmep${ee} --ctrl_rwd=1 --seed=$ss --dm_epochs=$ee --ho=$hh; done; done; done; done
+
 def train(args, extra_args):
     env_type, env_id = get_env_type(args)
     print('env_type: {}'.format(env_type))
     total_timesteps = int(args.num_timesteps)
     seed = args.seed
     ho=args.ho
+    dm_epochs=args.dm_epochs
     #print(args,extra_args)
     
     learn = get_learn_function(args.alg)
@@ -72,12 +88,18 @@ def train(args, extra_args):
             alg_kwargs['network'] = get_default_network(env_type)
     print('Training {} on {}:{} with arguments \n{}'.format(args.alg, env_type, env_id, alg_kwargs))
 
+    if args.save_path is not None:
+        save_path=osp.expanduser(args.save_path)
+    else:
+        save_path=args.save_path
+
     model = learn(
         env=env,
         env_type=env_type,
         total_timesteps=total_timesteps,
-        save_path=osp.expanduser(args.save_path),
+        save_path=save_path,
         ho=ho,
+        dm_epochs=dm_epochs,
         seed=seed,
         **alg_kwargs
     )
@@ -108,7 +130,7 @@ def build_env(args):
         config.gpu_options.allow_growth = True
         get_session(config=config)
         flatten_dict_observations = alg not in {'her'}
-        env = make_vec_env(env_id, env_type, args.horizon, args.with_obs, args.with_obs_end, args.obs_idx, args.obs_pen, args.sparse, args.ah_with_goal_loc, args.ah_goal_loc_idx, args.ah_with_reach_goal, args.ctrl_rwd, args.final_rwd, args.ctrl_rwd_coef, args.ho, args.goal_height, args.num_env or 1, seed, reward_scale=args.reward_scale, flatten_dict_observations=flatten_dict_observations)
+        env = make_vec_env(env_id, env_type, args.horizon, args.with_obs, args.with_obs_end, args.obs_idx, args.obs_pen, args.sparse, args.ah_with_goal_loc, args.ah_goal_loc_idx, args.ah_with_reach_goal, args.ctrl_rwd, args.final_rwd, args.ctrl_rwd_coef, args.ho, args.goal_height, args.num_env or 1, seed, reward_scale=args.reward_scale, flatten_dict_observations=flatten_dict_observations,dm_epochs=args.dm_epochs)
         #if env_type == 'mujoco':
         #    env = VecNormalize(env, use_tf=True)
     return env

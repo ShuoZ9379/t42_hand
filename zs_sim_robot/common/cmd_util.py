@@ -21,6 +21,7 @@ def make_vec_env(env_id, env_type, horizon, with_obs, with_obs_end, obs_idx, obs
                  start_index=0,
                  reward_scale=1.0,
                  flatten_dict_observations=True,
+                 dm_epochs=500,
                  gamestate=None,
                  initializer=None,
                  force_dummy=False):
@@ -45,11 +46,13 @@ def make_vec_env(env_id, env_type, horizon, with_obs, with_obs_end, obs_idx, obs
                 env = ah_env_noobs(env_seed=seed,ah_goal_loc_idx=ah_goal_loc_idx,ctrl_rwd=ctrl_rwd,ctrl_rwd_coef=ctrl_rwd_coef,with_reach_goal_terminal=ah_with_reach_goal,state_with_goal_loc=ah_with_goal_loc,sparse=sparse,final_rwd=final_rwd,horizon=horizon,ho=ho)
         elif env_id=='corl_Reacher-v2':
             from common.corl_reacher_env import corl_reacher
-            env = corl_reacher(env_seed=seed,ho=ho)
+            env = corl_reacher(env_seed=seed,ho=ho,dm_epochs=dm_epochs)
         elif env_id=='corl_Acrobot-v1':
+            #no ho, no dm_epochs
             from common.corl_acrobot_env import corl_acrobot
             env = corl_acrobot(env_seed=seed,goal_height=goal_height)
         elif env_id=='real_ah':
+            #no ho, no dm_epochs
             from common.real_ah_env import real_ah_env_noobs, real_ah_env_withobs
             if with_obs:
                 raise NotImplementedError
@@ -80,6 +83,7 @@ def common_arg_parser():
     parser.add_argument('--env', help='environment ID', type=str, default='Reacher-v2')
     parser.add_argument('--env_type', help='type of environment, used when the environment type cannot be automatically determined', type=str)
     parser.add_argument('--seed', help='RNG seed', type=int, default=0)
+    parser.add_argument('--poref_seed', help='aip reference policy seed', type=int, default=7)
     parser.add_argument('--with_obs', help='adaptive hand with obstacles or not', type=int, default=0)
     parser.add_argument('--with_obs_end', help='adaptive hand with obstacles ending or not', type=int, default=1)
     parser.add_argument('--obs_idx', help='obstacle index for adaptive hand', type=int, default=20)
@@ -89,11 +93,12 @@ def common_arg_parser():
     parser.add_argument('--ctrl_rwd', help='adaptive hand with control reward or not', type=int, default=0)
     parser.add_argument('--ctrl_rwd_coef', help='adaptive hand control reward coefficient', type=int, default=1)
     parser.add_argument('--horizon', help='adaptive hand horizon', type=int, default=2000)
-    parser.add_argument('--ho', help='adaptive hand ho', type=float, default=0.0)
     parser.add_argument('--goal_height', help='goal height for Acrobot-v1', type=float, default=1.)
     parser.add_argument('--final_rwd', help='final reward for adaptive hand', type=float, default=0.)
     parser.add_argument('--sparse', help='sparse reward or not', type=int, default=0)
     parser.add_argument('--obs_pen', help='obstacle penalty', type=float, default=1e6)
+    parser.add_argument('--ho', help='dynamics model trained ho_rate', type=float)
+    parser.add_argument('--dm_epochs', help='dynamics model trained epochs', type=int, default=500)
     parser.add_argument('--alg', help='Algorithm', type=str, default='ppo2')
     parser.add_argument('--num_timesteps', type=float, default=1e6),
     parser.add_argument('--network', help='network type (mlp, cnn, lstm, cnn_lstm, conv_only)', default=None)

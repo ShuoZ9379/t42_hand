@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+import logger
 from common import tf_util
 from a2c.utils import fc
 from common.distributions_aip import make_pdtype
@@ -12,11 +13,11 @@ from common.tf_util import get_session, save_variables, load_variables
 import gym
 from common.cmd_util import make_vec_env
 
-def build_env_ref(env_id,seed=0,goal_height=1.0,ho=0,ah_goal_loc_idx=8,ctrl_rwd=1,env_type='corl',with_obs=0,obs_idx=20,ah_with_goal_loc=0,ah_with_reach_goal=1,ctrl_rwd_coef=1):
+def build_env_ref(env_id,seed=0,goal_height=1.0,ho=0,ah_goal_loc_idx=8,ctrl_rwd=1,env_type='corl',with_obs=0,obs_idx=20,ah_with_goal_loc=0,ah_with_reach_goal=1,ctrl_rwd_coef=1,dm_epochs=500):
     config = tf.ConfigProto(allow_soft_placement=True,intra_op_parallelism_threads=1,inter_op_parallelism_threads=1)
     config.gpu_options.allow_growth = True
     get_session(config=config)
-    env = make_vec_env(env_id, env_type, 2000, with_obs, 1, obs_idx, 1e6, 0, ah_with_goal_loc, ah_goal_loc_idx, ah_with_reach_goal, ctrl_rwd, 0, ctrl_rwd_coef, ho, goal_height, 1, seed, reward_scale=1.0, flatten_dict_observations=True)
+    env = make_vec_env(env_id, env_type, 2000, with_obs, 1, obs_idx, 1e6, 0, ah_with_goal_loc, ah_goal_loc_idx, ah_with_reach_goal, ctrl_rwd, 0, ctrl_rwd_coef, ho, goal_height, 1, seed, reward_scale=1.0, flatten_dict_observations=True,dm_epochs=dm_epochs)
     return env
 
 def reacher_adjust_obs(obs):
@@ -85,6 +86,7 @@ class PolicyWithValue(object):
         self.ref_type=ref_type
         self.alpha_func=alpha_func
         self.env_name=env_id
+        self.r_diff_classify=r_diff_model.r_diff_classify
 
         vf_latent = vf_latent if vf_latent is not None else latent
 
@@ -130,7 +132,7 @@ class PolicyWithValue(object):
     def update_r_diff_model(self,r_diff_model):
         self.r_diff_model=r_diff_model
 
-    def step(self, observation, stochastic,ref_stochastic,**extra_feed):
+    def step(self, observation, stochastic,ref_stochastic,iter_progress=None,**extra_feed):
         
         if self.ref_type=='ppo':
             action_ref=get_ppo_action_ref(observation,self.policy_ref,env_name=self.env_name,ref_stochastic=ref_stochastic)
@@ -144,16 +146,102 @@ class PolicyWithValue(object):
                     r_diff=self.r_diff_model.predict(observation,np.clip(action_ref, np.array([-1.,-1.]), np.array([1.,1.])))
                     if self.alpha_func=='squared':
                         alpha=1-np.sqrt(r_diff)
-                        #print(alpha)
                     else:
                         raise NotImplementedError
+            elif self.ablation=='auto_clf':
+                if not self.r_diff_model.started:
+                    alpha=np.array([[1.0]])
+                else:
+                    r_diff=self.r_diff_model.predict(observation,np.clip(action_ref, np.array([-1.,-1.]), np.array([1.,1.])))
+                    alpha=1-r_diff
+
+
+            elif self.ablation=='auto_clf_ln':
+                if not self.r_diff_model.started:
+                    alpha=np.array([[1.0]])
+                else:
+                    r_diff=self.r_diff_model.predict(observation,np.clip(action_ref, np.array([-1.,-1.]), np.array([1.,1.])))
+                    alpha=1-r_diff
+                rn=np.random.rand()
+                if rn<iter_progress:
+                    alpha=alpha*0
+            elif self.ablation=='auto_clf_sq':
+                if not self.r_diff_model.started:
+                    alpha=np.array([[1.0]])
+                else:
+                    r_diff=self.r_diff_model.predict(observation,np.clip(action_ref, np.array([-1.,-1.]), np.array([1.,1.])))
+                    alpha=1-r_diff
+                rn=np.random.rand()
+                if rn<iter_progress**2:
+                    alpha=alpha*0
+            elif self.ablation=='auto_clf_sqrt':
+                if not self.r_diff_model.started:
+                    alpha=np.array([[1.0]])
+                else:
+                    r_diff=self.r_diff_model.predict(observation,np.clip(action_ref, np.array([-1.,-1.]), np.array([1.,1.])))
+                    alpha=1-r_diff
+                rn=np.random.rand()
+                if rn<np.sqrt(iter_progress):
+                    alpha=alpha*0
+
+
+            elif self.ablation=='auto_clf_ln_mid':
+                if not self.r_diff_model.started:
+                    alpha=np.array([[1.0]])
+                else:
+                    r_diff=self.r_diff_model.predict(observation,np.clip(action_ref, np.array([-1.,-1.]), np.array([1.,1.])))
+                    alpha=1-r_diff
+                rn=np.random.rand()
+                if iter_progress>=2/3:
+                    alpha=alpha*0
+                elif iter_progress>=1/3 and rn<3*iter_progress-1:
+                    alpha=alpha*0
+            elif self.ablation=='auto_clf_sq_mid':
+                if not self.r_diff_model.started:
+                    alpha=np.array([[1.0]])
+                else:
+                    r_diff=self.r_diff_model.predict(observation,np.clip(action_ref, np.array([-1.,-1.]), np.array([1.,1.])))
+                    alpha=1-r_diff
+                rn=np.random.rand()
+                if iter_progress>=2/3:
+                    alpha=alpha*0
+                elif iter_progress>=1/3 and rn<(3*iter_progress-1)**2:
+                    alpha=alpha*0
+            elif self.ablation=='auto_clf_sqrt_mid':
+                if not self.r_diff_model.started:
+                    alpha=np.array([[1.0]])
+                else:
+                    r_diff=self.r_diff_model.predict(observation,np.clip(action_ref, np.array([-1.,-1.]), np.array([1.,1.])))
+                    alpha=1-r_diff
+                rn=np.random.rand()
+                if iter_progress>=2/3:
+                    alpha=alpha*0
+                elif iter_progress>=1/3 and rn<np.sqrt(3*iter_progress-1):
+                    alpha=alpha*0
+
+                    
+            elif self.ablation=='init1then0' or self.ablation=='init1detthen0':
+                if not self.r_diff_model.started:
+                    alpha=np.array([[1.0]])
+                else:
+                    alpha=np.array([[0.0]])
             else:
                 alpha=np.array([[float(self.ablation)]])
         else:
             raise NotImplementedError
         
+        #logger.log(alpha)
+
         if stochastic:
-            a, v, state, neglogp = self._evaluate([self.action_sto, self.vf, self.state, self.neglogp_sto], observation,action_ref, alpha, **extra_feed)
+            if 'auto' in self.ablation or self.ablation=='init1then0' or self.ablation=='init1detthen0':
+                a, v, state, neglogp = self._evaluate([self.action_sto, self.vf, self.state, self.neglogp_sto], observation,action_ref, alpha, **extra_feed)
+            else:
+                if float(self.ablation)==1.0:
+                    #a, v, state, neglogp = self._evaluate([self.action_sto, self.vf, self.state, self.neglogp_sto], observation,action_ref, alpha, **extra_feed)
+                    a, v, state, neglogp = self._evaluate([self.action_det, self.vf, self.state, self.neglogp_sto], observation,action_ref, alpha, **extra_feed)
+                else:
+                    a, v, state, neglogp = self._evaluate([self.action_sto, self.vf, self.state, self.neglogp_sto], observation,action_ref, alpha, **extra_feed)
+            
         else:
             a, v, state, neglogp = self._evaluate([self.action_det, self.vf, self.state,self.neglogp_det], observation, action_ref, alpha, **extra_feed)
         if state.size == 0:

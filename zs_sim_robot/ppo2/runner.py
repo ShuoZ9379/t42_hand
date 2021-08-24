@@ -1,6 +1,7 @@
 import numpy as np
 from common.runners import AbstractEnvRunner
 import gym
+import tensorflow as tf
 
 class Runner(AbstractEnvRunner):
     """
@@ -20,7 +21,7 @@ class Runner(AbstractEnvRunner):
         # Possibly arguments for reset() (Deprecated!!!)
         self.kwargs=kwargs
 
-    def run(self,env_type,do_eval=False,num_eval_eps=1,compare=False,compare_ah_idx=8,reacher_sd=1,acrobot_sd=1,eval_steps=2048):
+    def run(self,env_type,do_eval=False,num_eval_eps=1,compare=False,compare_ah_idx=8,reacher_sd=1,acrobot_sd=1,eval_steps=2048,eval_stochastic=True):
         #compare_ah_idx : [0,2,7,8,15];  reacher_sd : [1,2,5]
         # Here, we init the lists that will contain the mb of experiences
         mb_obs, mb_rewards, mb_actions, mb_values, mb_dones, mb_neglogpacs = [],[],[],[],[],[]
@@ -112,7 +113,12 @@ class Runner(AbstractEnvRunner):
             done_ct=1
             #while done_ct<=num_eval_eps:
             for _ in range(self.nsteps):
-                actions, values, self.states, neglogpacs = self.model.step(self.obs, S=self.states, M=self.dones)
+                if eval_stochastic:
+                    actions, values, self.states, neglogpacs = self.model.step(self.obs, S=self.states, M=self.dones)
+                else:
+                    pl=self.model.act_model
+                    actions, values, self.states, neglogpacs=pl._evaluate([pl.pd.mode(), pl.vf, pl.state, pl.neglogp], self.obs)
+            
                 mb_obs.append(self.obs.copy())
                 mb_actions.append(actions)
                 mb_values.append(values)

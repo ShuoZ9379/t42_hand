@@ -1,0 +1,30 @@
+一，为了使aip对比model based方法更显出效果：
+0. check alpha： OK！
+1. tune eq(5) （and accordingly eq（3））(classify)
+2. interesting biased model: data during training of model is collected from policy not uniform (any heuristic policy, first phase of mfrl, etc) (bias of policy)
+
+结论：
+1.classify 比regression有效果 （ho0.9999deter well，ho0.9999sto well和ho0.9999sto poor都可证明）（可看ho0.9999sto poor的clf和regress alpha图） (除了ho0.999(better dm)的sto和det的fully trained policy时，reg比classify好一点点，因为ref policy特别好，所以alpha越一直靠近1越好)
+
+2.在dynamics model没有bias的情况下：
+2.1已经证明aip可以大幅提高poorly trained reference stochastic policy （ho0.9999sto poor最明显可证明，其他ho0.999deter，ho0.9999deter well和ho0.9999sto well也都有小小提高）（可看ho0.9999sto clf alpha图）
+2.2不考虑poorly trained reference deterministic policy因为就是基本action不动，但return还高（-11左右），这样就看不出来aip比model-based好 （可看ppo eval ho0.999seed99图）
+2.3well-trained reference policy时(有obstacle时肯定尽量先well train reference policy)，不管是不是deterministic还是stochastic，aip都比model-free前期学习的快（ho0.999deter和sto、ho0.9999deter以及ho0.9999sto都可证明）
+
+3.dynamics model bias：
+类似结果
+
+最好的结果（既比model based好，又比model free好或者接近model free）: pdf 0811meeting里的fig1.3, fig2.3, fig2.4, fig3.2这四个 （可能还需仔细看这个meetingpdf，或许有补充）
+
+
+二，为了给model free方法增加难度(也是为了证明aip比model free更快找到还不错的解)：
+1. potential func学习+设计reward,然后reacher设定obs一切再做
+
+
+三，解决shortshighted问题（可以同时解决一与二）：
+tune eq（4）Q的定义（也是Equation（3）里的Q）：用要学习的policy 来分别在real和dynamics model里rollout？（d>=0或alpha=1 就 证明在real里这个a只会更好）
+
+其他：
+1. acrobot ,fetchreacher
+
+

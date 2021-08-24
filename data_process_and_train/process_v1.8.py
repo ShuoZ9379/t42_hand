@@ -2,6 +2,8 @@
 #try centralize the center of obj marker on obj
 #valid rmat and tvec should not change much during one idx of collection
 #delete episode
+
+#新的数据的处理时要注意 是否需要预处理原先错误的数据记录（计算正确的z坐标数值）（打错字，z坐标写成y坐标了）
 from process_params import *
 from sys import argv
 #argv idx1 idx2 idx3 idx4 idx5 ... nm ne suffxi(v1_,avi_,...)
